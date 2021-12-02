@@ -1,0 +1,1 @@
+Rust version of SQLsmith
