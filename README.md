@@ -1,1 +1,2 @@
-Rust version of SQLsmith
+# cypher-smith
+Rust Version of SQLsmith
