@@ -1,3 +1,4 @@
 fn main() {
-    println!("Hello, world!");
-}
+    cypher_smith::Driver::driver();
+} 
+
