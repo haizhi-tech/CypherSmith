@@ -1,7 +1,7 @@
 mod ast;
 mod common;
-mod driver;
 mod db;
+mod driver;
 
-pub use driver::Driver;
 pub use common::Log;
+pub use driver::Driver;

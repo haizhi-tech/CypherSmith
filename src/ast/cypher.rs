@@ -1,6 +1,6 @@
 use super::expr::{
-    Expression, IntegerLiteral, Paramter, RelationshipDirection, ReserverdWord, SymbolicName,
-    Variable,
+    Expression, IntegerLiteral, NodeLabel, Paramter, RelationshipDirection, ReserverdWord,
+    SymbolicName, Variable,
 };
 
 use paste::paste;
@@ -24,10 +24,48 @@ macro_rules! cypher_nodes_impl {
                 type Output;
 
                 $(
-                    fn [<visit_ $name:snake>](&mut self $(, $param: &$type)* ) -> Self::Output;
+                    fn [<visit_ $name:snake>](&self) -> Self::Output;
                 )*
 
-                fn visit(&mut self, node: &CypherNode) -> Self::Output {
+                fn visit(&self) -> Self::Output {
+                    self.visit_query()
+                }
+            }
+
+            // pub trait ConvertVisitor {
+            //     type Output;
+
+            //     $(
+            //         fn [<visit_ $name:snake>](&self $(, $param: $type)* ) -> Self::Output;
+            //     )*
+
+
+            //     // fn visit(&mut self, node: &CypherNode) -> Self::Output {
+            //     //     match node {
+            //     //         $(
+            //     //             CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
+            //     //         )*
+            //     //     }
+            //     // }
+
+            //     fn visit(&mut self, node: &CypherNode) -> Self::Output {
+            //         match node {
+            //             $(
+            //                 CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
+            //             )*
+            //         }
+            //     }
+            // }
+
+            pub trait ConvertVisitor {
+                type Output;
+
+                $(
+                    fn [<visit_ $name:snake>](&mut self $(, $param: $type)* ) -> Self::Output;
+                )*
+
+                fn visit(&mut self, node: impl Into<CypherNode>) -> Self::Output {
+                    let node: CypherNode = node.into();
                     match node {
                         $(
                             CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
@@ -46,7 +84,7 @@ macro_rules! cypher_nodes_impl {
 
 cypher_nodes_impl! {
 
-    /// Base Query: RegularQuery || StandaloneCall
+    /// Base Query: RegularQuery | StandaloneCall
     Query {
         query: Box<CypherNode>,
     },
@@ -55,6 +93,71 @@ cypher_nodes_impl! {
     RegularQuery {
         single_query: Box<CypherNode>,
         union_all: Vec<Box<CypherNode>>,
+    },
+
+    /// SingleQuery
+    SingleQuery {
+        reading_clauses: Vec<Box<CypherNode>>,
+        updating_clauses: Vec<Box<CypherNode>>,
+        return_clause: Option<Box<CypherNode>>,
+    },
+
+    /// ReadingClause
+    ///
+    /// Match or Unwind or InqueryCall
+    ReadingClause {
+        match_clause: Option<Box<CypherNode>>,
+    },
+
+    /// Return clause
+    ///
+    /// 'return' ProjectionBody
+    ///  ProjectionBody -> ProjectionItems
+    Return {
+        projection_body: Vec<CypherNode>,
+    },
+
+    /// ProjectionItem
+    ///
+    ProjectionItem {
+        expressions: Vec<(Expression, Option<Variable>)>,
+    },
+
+    /// Match
+    ///
+    Match {
+        is_optional: bool,
+        pattern: Box<CypherNode>,
+        where_clause: Option<Box<CypherNode>>,
+    },
+
+    /// Pattern
+    ///
+    /// Vec<PatternPart>
+    Pattern {
+        pattern_parts: Vec<Box<CypherNode>>,
+    },
+
+    /// PatternPart
+    ///
+    /// Variable = AnonymousPatternPart
+    /// AnonymousPatternPart : PatternElement
+    PatternPart {
+        var: Variable,
+        pattern_element: Box<CypherNode>,
+    },
+
+    /// PatternElement
+    ///
+    /// Vec<(NodePattern, Vec<PatternElementChain>)>
+    PatternElement {
+        pattern_element: Vec<(Box<CypherNode>, Vec<Box<CypherNode>>)>,
+    },
+
+    /// NodePattern
+    NodePattern {
+        var: Option<Variable>,
+        labels: Vec<NodeLabel>,
     },
 }
 
