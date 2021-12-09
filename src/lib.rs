@@ -1,15 +1,7 @@
 mod ast;
+mod common;
 mod driver;
+mod db;
 
-
-use driver::driver;
-
-pub struct Driver {
-
-}
-
-impl Driver {
-    pub fn driver() {
-        driver();
-    }
-}
+pub use driver::Driver;
+pub use common::Log;
