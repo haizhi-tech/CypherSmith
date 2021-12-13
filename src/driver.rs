@@ -1,4 +1,4 @@
-use crate::ast::{CypherNode, TransformVisitor};
+use crate::ast::{CypherNode, GeneratorVisitor, TransformVisitor};
 use crate::common::RandomGenerator;
 
 #[derive(Default)]
@@ -17,13 +17,15 @@ impl Driver {
 
     // ast tree construct
     pub fn execute(&self) -> CypherNode {
-        todo!()
         // let transform = TransformVisitor::new();
+        let mut ast_generator = GeneratorVisitor::new();
+        ast_generator.visit()
     }
 
     // ast tree transfrom to cypher string.
-    pub fn transfrom(&self, cypher_node: &CypherNode) -> String {
-        todo!()
+    pub fn transfrom(&self, cypher_node: Box<CypherNode>) -> String {
+        let mut transformer = TransformVisitor::new();
+        transformer.exec(cypher_node)
     }
 
     pub fn add_query(&mut self) {

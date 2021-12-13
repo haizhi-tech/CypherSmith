@@ -24,10 +24,10 @@ macro_rules! cypher_nodes_impl {
                 type Output;
 
                 $(
-                    fn [<visit_ $name:snake>](&self) -> Self::Output;
+                    fn [<visit_ $name:snake>](&mut self) -> Self::Output;
                 )*
 
-                fn visit(&self) -> Self::Output {
+                fn visit(&mut self) -> Self::Output {
                     self.visit_query()
                 }
             }
@@ -73,7 +73,28 @@ macro_rules! cypher_nodes_impl {
                     }
                 }
             }
+
+            impl std::fmt::Debug for CypherNode {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    match self {
+                    $(
+                        CypherNode::$name { $( $param, )* } => {
+                            let mut struct_formatter = f.debug_struct(stringify!($name));
+                            $( cypher_nodes_impl!( FORMAT(struct_formatter) $param: $type); )*
+                            struct_formatter.finish()
+                        },
+                    )*
+                    }
+                }
+            }
         }
+    };
+
+    // ( FORMAT($formatter: ident) $param:ident : Box<CypherNode> ) => {
+    //     // do not recursively format subplan
+    // };
+    ( FORMAT($formatter: ident) $param:ident : $type:ty ) => {
+        $formatter.field(stringify!($param), $param);
     };
 
     // ( $(
@@ -161,125 +182,12 @@ cypher_nodes_impl! {
     },
 }
 
-pub enum Query {
-    RegularQuery(RegularQuery),
-    StandaloneCall,
+impl From<Box<CypherNode>> for CypherNode {
+    fn from(x: Box<CypherNode>) -> Self {
+        // NOTE: deref-move syntax only works for Box<T>
+        *x
+    }
 }
-pub struct RegularQuery {
-    single_query: SingleQuery,
-    union_all: Vec<UnionQuery>,
-}
-
-pub enum SingleQuery {
-    SinglePartQuery(SinglePartQuery),
-    MultiPartQuery(MultiPartQuery),
-}
-
-pub struct UnionQuery {}
-
-/// to part: one is
-/// readingclause* return
-/// updatingclause+ [return]
-pub struct SinglePartQuery {
-    reading_clauses: Vec<ReadingClause>,
-    updating_clauses: Vec<UpdatingClause>,
-    return_clause: Option<Return>,
-}
-pub struct MultiPartQuery {}
-
-pub enum ReadingClause {
-    Match(Match),
-    Unwind,
-    InQueryCall,
-}
-
-/// match: [optional] match pattern [where]
-pub struct Match {
-    is_optional: bool,
-    pattern: Pattern,
-    where_clause: Option<WhereClause>,
-}
-
-pub struct Pattern {
-    pattern_parts: Vec<PatternPart>,
-}
-
-pub enum PatternPart {
-    AnonymousPattternPart(AnonymousPattternPart),
-    VariableAnonymousPattternPart(VariableAnonymousPattternPart),
-}
-
-pub struct VariableAnonymousPattternPart {
-    variable: Variable,
-    anonymous_patttern_part: AnonymousPattternPart,
-}
-
-pub struct AnonymousPattternPart {
-    pattern_element: PatternElement,
-}
-
-/// PatternElement: ( PatternElement ) | nodepattern (patternelementchain)*
-pub struct PatternElement {
-    is_self: Box<PatternElement>,
-    node_pattern: NodePattern,
-    pattern_element_chain: PatternElementChain,
-}
-
-pub struct PatternElementChain {
-    relationship_pattern: RelationshipPattern,
-    node_pattern: NodePattern,
-}
-
-/// relationshippattern: <-[ ]->
-/// <- [] -
-/// - [] ->
-/// - [] -
-pub struct RelationshipPattern {
-    relaionship_direction: RelationshipDirection,
-    relationship_detail: RelationShipDetail,
-}
-
-pub struct RelationShipDetail {
-    variable: Option<Variable>,
-    relationship_types: Option<Vec<RealTypeName>>,
-    range_literal: Option<RangeLiteral>,
-    properties: Option<Properties>,
-}
-
-pub struct Properties {
-    map_literal: MapLiteral,
-    paramter: Paramter,
-}
-
-pub struct MapLiteral {
-    properties_expression: Vec<(PropertyKeyName, Expression)>,
-}
-
-pub enum PropertyKeyName {
-    SchemaName(SchemaName),
-}
-
-pub struct RangeLiteral {
-    range_literal: Vec<IntegerLiteral>,
-}
-
-// realtypename: schema name
-pub struct RealTypeName {
-    schema_name: SchemaName,
-}
-
-pub enum SchemaName {
-    SymbolicName(SymbolicName),
-    ReservedWord(ReserverdWord),
-}
-
-pub struct NodePattern {}
-
-pub struct WhereClause {}
-
-pub struct UpdatingClause {}
-
-pub struct Return {}
 
 #[cfg(test)]
 mod tests {

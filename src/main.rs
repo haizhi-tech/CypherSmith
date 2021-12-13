@@ -1,14 +1,18 @@
+use cypher_smith::{Driver, Log};
+
 fn main() {
     // add connection and get the schema information.
     // get the label name and so on.
-    let mut driver = cypher_smith::Driver::new();
+    let mut driver = Driver::new();
     let cypher_ast = driver.execute();
-    let cypher_string = driver.transfrom(&cypher_ast);
+
+    println!("{:?}", cypher_ast);
+    let cypher_string = driver.transfrom(Box::new(cypher_ast));
     driver.add_query();
 
-    let logger = cypher_smith::Log::new();
-    logger.execute(&cypher_ast);
+    // let logger = Log::new();
+    // logger.execute(&cypher_ast);
 
-    logger.report();
+    // logger.report();
     println!("{}", cypher_string);
 }
