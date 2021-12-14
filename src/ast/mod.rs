@@ -6,7 +6,7 @@ mod prod;
 mod transform;
 
 // pub use expr::{Variable};
-pub use ast_gen::GeneratorVisitor;
+pub use ast_gen::CypherGenerator;
 pub use cypher::CypherNode;
-pub use expression::{ExpressionNode, ExpressionNodeVisitor};
+pub use expression::ExpressionNodeVisitor;
 pub use transform::TransformVisitor;

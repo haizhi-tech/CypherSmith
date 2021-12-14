@@ -3,6 +3,7 @@ use rand::{distributions::Uniform, rngs::ThreadRng, thread_rng, Rng};
 #[derive(Clone)]
 pub struct RandomGenerator {
     rng: ThreadRng,
+    uniform_d2: Uniform<i32>,
     uniform_d6: Uniform<i32>,
     uniform_d9: Uniform<i32>,
     uniform_d12: Uniform<i32>,
@@ -15,6 +16,7 @@ impl RandomGenerator {
     pub fn new() -> RandomGenerator {
         RandomGenerator {
             rng: thread_rng(),
+            uniform_d2: Uniform::new(0,2),
             uniform_d6: Uniform::new(0, 6),
             uniform_d9: Uniform::new(0, 9),
             uniform_d12: Uniform::new(0, 12),
@@ -22,6 +24,10 @@ impl RandomGenerator {
             uniform_d42: Uniform::new(0, 42),
             uniform_d100: Uniform::new(0, 100),
         }
+    }
+
+    pub fn d2(&mut self) -> i32 {
+        self.rng.sample(self.uniform_d2)
     }
 
     pub fn d6(&mut self) -> i32 {
@@ -61,6 +67,9 @@ mod test {
     #[test]
     fn test_random_generator() {
         let mut gen_random = RandomGenerator::new();
+        for i in 0..10 {
+            eprintln!("random number {}: {}", i, gen_random.d2());
+        }
         for i in 0..10 {
             eprintln!("random number {}: {}", i, gen_random.d6());
         }

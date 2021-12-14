@@ -1,4 +1,4 @@
-use crate::ast::{CypherNode, GeneratorVisitor, TransformVisitor};
+use crate::ast::{CypherNode, CypherGenerator, TransformVisitor};
 use crate::common::RandomGenerator;
 
 #[derive(Default)]
@@ -18,7 +18,7 @@ impl Driver {
     // ast tree construct
     pub fn execute(&self) -> CypherNode {
         // let transform = TransformVisitor::new();
-        let mut ast_generator = GeneratorVisitor::new();
+        let mut ast_generator = CypherGenerator::new();
         ast_generator.visit()
     }
 

@@ -5,4 +5,4 @@ mod schema;
 
 pub use self::log::Log;
 pub use self::rand::RandomGenerator;
-pub use expr::VariableGenerator;
+pub use expr::{VariableGenerator, RESERVED_WORD};

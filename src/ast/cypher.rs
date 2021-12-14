@@ -116,18 +116,49 @@ cypher_nodes_impl! {
         union_all: Vec<Box<CypherNode>>,
     },
 
+    /// StandaloneCall
+    StandaloneCall {
+
+    },
+
     /// SingleQuery
     SingleQuery {
+        part_query: Box<CypherNode>,
+    },
+
+    /// SinglePartQuery
+    SinglePartQuery {
         reading_clauses: Vec<Box<CypherNode>>,
         updating_clauses: Vec<Box<CypherNode>>,
         return_clause: Option<Box<CypherNode>>,
+    },
+
+    /// MultiPartQuery
+    MultiPartQuery {
+        multi_part: Vec<(Vec<Box<CypherNode>>, Vec<Box<CypherNode>>, Box<CypherNode>)>,
+        single_part: Box<CypherNode>,
+    },
+
+    /// WithQuery
+    With {
+
+    },
+
+    /// Union 
+    Union {
+        union_all: Option<(bool, Box<CypherNode>)>,
     },
 
     /// ReadingClause
     ///
     /// Match or Unwind or InqueryCall
     ReadingClause {
-        match_clause: Option<Box<CypherNode>>,
+        reading_clause: Box<CypherNode>,
+    },
+
+    /// UpdatingClause
+    UpdatingClause {
+
     },
 
     /// Return clause
@@ -150,6 +181,18 @@ cypher_nodes_impl! {
         is_optional: bool,
         pattern: Box<CypherNode>,
         where_clause: Option<Box<CypherNode>>,
+    },
+
+    /// Unwind : UNWIND Expression AS Variable
+    Unwind {
+        expression: Expression,
+        variable: Variable,
+    },
+
+    /// InQueryCall
+    InQueryCall {
+        explicit_proceduce_invocation: Box<CypherNode>,
+        yield_items: Vec<Box<CypherNode>>,
     },
 
     /// Pattern

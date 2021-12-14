@@ -1,3 +1,5 @@
+use crate::common::{RandomGenerator, RESERVED_WORD};
+
 // pub enum Variable {
 //     UnescapedSymbolicName,
 //     EscapedSymbolicName,
@@ -46,55 +48,6 @@ impl VariableGenerator {
     }
 }
 
-// resverserd words number: 45
-pub enum ReservedWord {
-    All,
-    And,
-    As,
-    Asc,
-    Ascending,
-    By,
-    Case,
-    Create,
-    Delete,
-    Desc,
-    Descending,
-    Detach,
-    Distinct,
-    Drop,
-    Else,
-    End,
-    Ends,
-    Exists,
-    False,
-    In,
-    Is,
-    Limit,
-    Match,
-    Merge,
-    Not,
-    Null,
-    On,
-    Optional,
-    Or,
-    Order,
-    Remove,
-    Return,
-    Set,
-    Skip,
-    Starts,
-    Then,
-    To,
-    True,
-    Union,
-    Unique,
-    Unwind,
-    When,
-    Where,
-    With,
-    Xor,
-}
-
 pub enum RelationshipDirection {
     // <- [] -
     Left,
@@ -138,15 +91,45 @@ pub struct NodeLabel {
 
 impl NodeLabel {
     pub fn new() -> Self {
+        // let label_name = if random.d12() < 6 { // Variable name
+            
+        // } else { // label_name == ReserverdWord
+        //     let x = ReservedWord::Delete;
+        // };
         NodeLabel {
             label_name: "Person".to_string(),
         }
     }
+
+    pub fn get_name(&self) -> String {
+        self.label_name.clone()
+    }
 }
+
+#[derive(Debug, Default)]
+pub struct SchemaName {
+    label_name: String,
+}
+
+impl SchemaName {
+    pub fn new(random: &mut RandomGenerator) -> Self {
+        let label_name = if random.d12() < 6 { // Variable name
+            NodeLabel::new().get_name()
+        } else { // label_name == ReserverdWord
+            let index = random.d42();
+            RESERVED_WORD[index as usize].to_string()
+        };
+        SchemaName { 
+            label_name,
+        }
+    }
+
+}
+
 
 #[cfg(test)]
 mod tests {
-    use super::VariableGenerator;
+    use super::{RandomGenerator, VariableGenerator, SchemaName};
 
     #[test]
     fn test_variable_generator() {
@@ -157,5 +140,12 @@ mod tests {
             println!("{:?}", new_var);
         }
         println!("{:?}", var);
+    }
+
+    #[test]
+    fn test_schema_name() {
+        let mut random_gen = RandomGenerator::new();
+        let new_schema_name = SchemaName::new(&mut random_gen);
+        println!("{:?}", new_schema_name);
     }
 }
