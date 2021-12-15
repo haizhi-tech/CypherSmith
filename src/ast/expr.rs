@@ -49,11 +49,19 @@ impl VariableGenerator {
 }
 
 #[derive(Debug, Default)]
-pub struct Properties {}
+pub struct Properties {
+    property_name: String,
+}
 
 impl Properties {
     pub fn new() -> Self {
-        Properties {}
+        Properties {
+            property_name: "property1".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.property_name.clone()
     }
 }
 

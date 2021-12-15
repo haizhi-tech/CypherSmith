@@ -275,8 +275,7 @@ cypher_nodes_impl! {
         direction: RelationshipDirection,
         var: Option<Variable>,
         edge_labels: Vec<NodeLabel>,
-        range_start: i32,
-        range_end: i32,
+        range: (Option<i32>, Option<i32>),
         properties: Option<Properties>,
     },
 }
