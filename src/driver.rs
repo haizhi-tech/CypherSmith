@@ -1,4 +1,4 @@
-use crate::ast::{CypherNode, CypherGenerator, TransformVisitor};
+use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
 use crate::common::RandomGenerator;
 
 #[derive(Default)]

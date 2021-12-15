@@ -48,6 +48,16 @@ impl VariableGenerator {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct Properties {}
+
+impl Properties {
+    pub fn new() -> Self {
+        Properties {}
+    }
+}
+
+#[derive(Debug)]
 pub enum RelationshipDirection {
     // <- [] -
     Left,
@@ -60,8 +70,6 @@ pub enum RelationshipDirection {
 }
 
 pub struct SymbolicName {}
-
-pub struct ReserverdWord {}
 
 pub struct IntegerLiteral {}
 
@@ -92,7 +100,7 @@ pub struct NodeLabel {
 impl NodeLabel {
     pub fn new() -> Self {
         // let label_name = if random.d12() < 6 { // Variable name
-            
+
         // } else { // label_name == ReserverdWord
         //     let x = ReservedWord::Delete;
         // };
@@ -113,23 +121,21 @@ pub struct SchemaName {
 
 impl SchemaName {
     pub fn new(random: &mut RandomGenerator) -> Self {
-        let label_name = if random.d12() < 6 { // Variable name
+        let label_name = if random.d12() < 6 {
+            // Variable name
             NodeLabel::new().get_name()
-        } else { // label_name == ReserverdWord
+        } else {
+            // label_name == ReserverdWord
             let index = random.d42();
             RESERVED_WORD[index as usize].to_string()
         };
-        SchemaName { 
-            label_name,
-        }
+        SchemaName { label_name }
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
-    use super::{RandomGenerator, VariableGenerator, SchemaName};
+    use super::{RandomGenerator, SchemaName, VariableGenerator};
 
     #[test]
     fn test_variable_generator() {

@@ -1,6 +1,6 @@
 use super::{
     cypher::{CypherNode, CypherNodeVisitor},
-    expr::{Expression, NodeLabel, VariableGenerator},
+    expr::{Expression, NodeLabel, Properties, RelationshipDirection, VariableGenerator},
 };
 use crate::common::RandomGenerator;
 
@@ -31,12 +31,11 @@ impl CypherNodeVisitor for CypherGenerator {
 
     /// query: regular_query | standaloneCall
     fn visit_query(&mut self) -> Self::Output {
-        let ty =self.random.d2();
+        let ty = self.random.d2();
         let query = if ty != 0 {
             self.visit_regular_query()
-        }  else {
-            // self.visit_standalone_call()
-            todo!()
+        } else {
+            self.visit_standalone_call()
         };
         CypherNode::Query {
             query: Box::new(query),
@@ -55,21 +54,16 @@ impl CypherNodeVisitor for CypherGenerator {
         }
     }
 
+    // todo: need to implementation.
     fn visit_standalone_call(&mut self) -> Self::Output {
-        todo!()
+        self.visit_regular_query()
     }
 
     fn visit_union(&mut self) -> Self::Output {
-        let union_type = self.random.d2();
         let sub_query = Box::new(self.visit_single_query());
-        let is_all = if union_type > 0 {
-            true
-        } else {
-            false
-        };
 
         CypherNode::Union {
-            union_all: Some((is_all, sub_query)),
+            union_all: Some((self.random.bool(), sub_query)),
         }
     }
 
@@ -84,7 +78,6 @@ impl CypherNodeVisitor for CypherGenerator {
             part_query: Box::new(query),
         }
     }
-
 
     /// SinglePartQuery: ReadingClause* Return | ReadingClause* UpdatingClause+ Return?
     fn visit_single_part_query(&mut self) -> Self::Output {
@@ -131,12 +124,12 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let with_number = self.random.d2();
         for _ in 0..with_number {
-            let reading_clause = vec![];
-            let updating_clause = vec![];
+            let mut reading_clause = vec![];
+            let mut updating_clause = vec![];
             let reading_number = self.random.d2();
             let updating_number = self.random.d2();
 
-            for _ in  0..reading_number {
+            for _ in 0..reading_number {
                 reading_clause.push(Box::new(self.visit_reading_clause()));
             }
 
@@ -155,7 +148,16 @@ impl CypherNodeVisitor for CypherGenerator {
     }
 
     fn visit_with(&mut self) -> Self::Output {
-        todo!()
+        let projection_body = Box::new(self.visit_projection_body());
+        let where_clause = if self.random.bool() {
+            Some(Expression::new())
+        } else {
+            None
+        };
+        CypherNode::With {
+            projection_body,
+            where_clause,
+        }
     }
 
     fn visit_reading_clause(&mut self) -> Self::Output {
@@ -164,63 +166,192 @@ impl CypherNodeVisitor for CypherGenerator {
             1 => self.visit_unwind(),
             2 => self.visit_in_query_call(),
             _ => {
-                // todo: have not implement
+                // todo: need to modify
                 self.visit_match()
-            },
+            }
         };
-        
+
         CypherNode::ReadingClause {
             reading_clause: Box::new(reading_clause),
         }
     }
 
-    fn visit_updating_clause(&mut self) -> Self::Output {
+    fn visit_match(&mut self) -> Self::Output {
+        let pattern = Box::new(self.visit_pattern());
+        let where_clause = if self.random.bool() {
+            Some(Expression::new())
+        } else {
+            None
+        };
+        CypherNode::Match {
+            is_optional: self.random.bool(),
+            pattern,
+            where_clause,
+        }
+    }
+
+    // unwind: UNWIND expression AS variable.
+    fn visit_unwind(&mut self) -> Self::Output {
+        CypherNode::Unwind {
+            expression: Expression::new(),
+            variable: self.variables.new_variable(),
+        }
+    }
+
+    // todo: need implementation.
+    fn visit_in_query_call(&mut self) -> Self::Output {
         todo!()
     }
 
-    fn visit_return(&mut self) -> Self::Output {
-        // easy case: len(Vec) = 1
-        let projection_item = self.visit_projection_item();
-        CypherNode::Return {
-            projection_body: vec![projection_item],
+    fn visit_updating_clause(&mut self) -> Self::Output {
+        let updating_clause = match self.random.d6() {
+            0 => self.visit_create(),
+            1 => self.visit_merge(),
+            2 => self.visit_delete(),
+            3 => self.visit_set(),
+            4 => self.visit_remove(),
+            _ => {
+                // todo: need to modify
+                self.visit_create()
+            }
+        };
+
+        CypherNode::UpdatingClause {
+            updating_clause: Box::new(updating_clause),
         }
     }
 
-    fn visit_projection_item(&mut self) -> Self::Output {
-        let expression = Expression::new();
-        CypherNode::ProjectionItem {
-            expressions: vec![(expression, None)],
-        }
-    }
-
-    fn visit_match(&mut self) -> Self::Output {
-        let pattern = Box::new(self.visit_pattern());
-        CypherNode::Match {
-            is_optional: false,
-            pattern,
-            where_clause: None,
+    fn visit_create(&mut self) -> Self::Output {
+        CypherNode::Create {
+            pattern: Box::new(self.visit_pattern()),
         }
     }
 
     // todo
-    fn visit_unwind(&mut self) -> Self::Output {
+    fn visit_merge(&mut self) -> Self::Output {
         todo!()
     }
 
-    // todo!()
-    fn visit_in_query_call(&mut self) ->Self::Output {
+    // todo
+    fn visit_delete(&mut self) -> Self::Output {
         todo!()
     }
 
-    fn visit_pattern(&mut self) -> Self::Output {
-        let pattern_part = Box::new(self.visit_pattern_part());
-        CypherNode::Pattern {
-            pattern_parts: vec![pattern_part],
+    // todo
+    fn visit_set(&mut self) -> Self::Output {
+        todo!()
+    }
+
+    // todo
+    fn visit_remove(&mut self) -> Self::Output {
+        todo!()
+    }
+
+    /// Return clause: return projection_body.
+    fn visit_return(&mut self) -> Self::Output {
+        let projection_body = Box::new(self.visit_projection_body());
+        CypherNode::Return { projection_body }
+    }
+
+    fn visit_projection_body(&mut self) -> Self::Output {
+        let is_distinct = self.random.bool();
+        let projection_items = Box::new(self.visit_projection_items());
+        // order:
+        let order = if self.random.low_prob_bool() {
+            Some(Box::new(self.visit_order()))
+        } else {
+            None
+        };
+        let skip = if self.random.low_prob_bool() {
+            Some(Expression::new())
+        } else {
+            None
+        };
+        let limit = if self.random.low_prob_bool() {
+            Some(Expression::new())
+        } else {
+            None
+        };
+        CypherNode::ProjectionBody {
+            is_distinct,
+            projection_items,
+            order,
+            skip,
+            limit,
         }
     }
 
+    fn visit_projection_items(&mut self) -> Self::Output {
+        let mut expressions = Vec::new();
+        let is_all = if self.random.bool() {
+            true
+        } else {
+            let var = if self.random.bool() {
+                Some(self.variables.new_variable())
+            } else {
+                None
+            };
+            expressions.push((Expression::new(), var));
+            false
+        };
+
+        // projection_items
+        for _ in 0..self.random.d2() {
+            let var = if self.random.bool() {
+                Some(self.variables.new_variable())
+            } else {
+                None
+            };
+            expressions.push((Expression::new(), var));
+        }
+
+        CypherNode::ProjectionItems {
+            is_all,
+            expressions,
+        }
+    }
+
+    /// order: order by sort_items
+    fn visit_order(&mut self) -> Self::Output {
+        let sort_rules = vec!["ASC", "DESC", "ASCENDING", "DESCENDING"];
+        let mut sort_items = vec![];
+        let rule = if self.random.bool() {
+            Some(sort_rules[self.random.d2() as usize].to_string())
+        } else {
+            None
+        };
+        sort_items.push((Expression::new(), rule));
+
+        for _ in 0..self.random.d2() {
+            let rule = if self.random.bool() {
+                Some(sort_rules[self.random.d2() as usize].to_string())
+            } else {
+                None
+            };
+            sort_items.push((Expression::new(), rule))
+        }
+
+        CypherNode::Order { sort_items }
+    }
+
+    // Pattern: PatternPart*
+    fn visit_pattern(&mut self) -> Self::Output {
+        let mut pattern_parts = vec![];
+        for _ in 0..self.random.d2() {
+            pattern_parts.push(Box::new(self.visit_pattern_part()));
+        }
+
+        CypherNode::Pattern { pattern_parts }
+    }
+
+    // PatternPart: (Variable =)? pattern_element
     fn visit_pattern_part(&mut self) -> Self::Output {
-        let var = self.variables.new_variable();
+        let var = if self.random.bool() {
+            Some(self.variables.new_variable())
+        } else {
+            None
+        };
+
         let pattern_element = Box::new(self.visit_pattern_element());
         CypherNode::PatternPart {
             var,
@@ -228,19 +359,95 @@ impl CypherNodeVisitor for CypherGenerator {
         }
     }
 
+    // pattern_element: NodePattern (RelationshipPattern NodePattern)*
     fn visit_pattern_element(&mut self) -> Self::Output {
         let node_pattern = Box::new(self.visit_node_pattern());
+
+        let mut pattern_element_chain = vec![];
+        for _ in 0..self.random.d2() {
+            pattern_element_chain.push((
+                Box::new(self.visit_relationship_pattern()),
+                Box::new(self.visit_node_pattern()),
+            ));
+        }
+
         CypherNode::PatternElement {
-            pattern_element: vec![(node_pattern, vec![])],
+            parentheses: self.random.d2(),
+            pattern_element: (node_pattern, pattern_element_chain),
         }
     }
 
+    // NodePattern: ( Variable? (:label)* Properties)
     fn visit_node_pattern(&mut self) -> Self::Output {
-        let label = NodeLabel::new();
+        let var = if self.random.bool() {
+            Some(self.variables.new_variable())
+        } else {
+            None
+        };
+
+        let mut vertex_labels = vec![];
+        for _ in 0..self.random.d2() {
+            vertex_labels.push(NodeLabel::new());
+        }
+
+        let properties = if self.random.bool() {
+            Some(Properties::new())
+        } else {
+            None
+        };
+
         CypherNode::NodePattern {
-            var: None,
-            labels: vec![label],
+            var,
+            vertex_labels,
+            properties,
         }
     }
 
+    fn visit_relationship_pattern(&mut self) -> Self::Output {
+        let direction = match self.random.d6() {
+            0 => RelationshipDirection::Left,
+            1 => RelationshipDirection::Right,
+            2 => RelationshipDirection::Both,
+            3 => RelationshipDirection::None,
+            _ => RelationshipDirection::None,
+        };
+        let var = if self.random.bool() {
+            Some(self.variables.new_variable())
+        } else {
+            None
+        };
+        let mut edge_labels = vec![];
+        for _ in 0..self.random.d2() {
+            edge_labels.push(NodeLabel::new());
+        }
+        let range_start = self.random.d2();
+        let range_end = self.random.d6();
+
+        let properties = if self.random.bool() {
+            Some(Properties::new())
+        } else {
+            None
+        };
+
+        CypherNode::RelationshipPattern {
+            direction,
+            var,
+            edge_labels,
+            range_start,
+            range_end,
+            properties,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::CypherGenerator;
+
+    #[test]
+    fn query_test() {
+        let mut generator = CypherGenerator::new();
+        println!("{:?}", generator.visit());
+    }
 }

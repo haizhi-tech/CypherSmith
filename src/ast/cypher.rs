@@ -1,5 +1,5 @@
 use super::expr::{
-    Expression, IntegerLiteral, NodeLabel, Paramter, RelationshipDirection, ReserverdWord,
+    Expression, IntegerLiteral, NodeLabel, Paramter, Properties, RelationshipDirection,
     SymbolicName, Variable,
 };
 
@@ -141,10 +141,11 @@ cypher_nodes_impl! {
 
     /// WithQuery
     With {
-
+        projection_body: Box<CypherNode>,
+        where_clause: Option<Expression>,
     },
 
-    /// Union 
+    /// Union
     Union {
         union_all: Option<(bool, Box<CypherNode>)>,
     },
@@ -158,7 +159,7 @@ cypher_nodes_impl! {
 
     /// UpdatingClause
     UpdatingClause {
-
+        updating_clause: Box<CypherNode>,
     },
 
     /// Return clause
@@ -166,13 +167,31 @@ cypher_nodes_impl! {
     /// 'return' ProjectionBody
     ///  ProjectionBody -> ProjectionItems
     Return {
-        projection_body: Vec<CypherNode>,
+        projection_body: Box<CypherNode>,
     },
 
-    /// ProjectionItem
+    /// ProjectionBody: DISTINCT? ProjectionItems Order? Skip? Limit?
+    ProjectionBody {
+        is_distinct: bool,
+        projection_items: Box<CypherNode>,
+        order: Option<Box<CypherNode>>,
+        skip: Option<Expression>,
+        limit: Option<Expression>,
+    },
+
+    /// ProjectionItems
     ///
-    ProjectionItem {
+    /// Projectionitem+ | *,(projectionitem)*
+    ProjectionItems {
+        // is_all = true: *
+        is_all: bool,
+        // expression as variable.
         expressions: Vec<(Expression, Option<Variable>)>,
+    },
+
+    /// Order: order by sort_items(expression (asc|desc|...|)?)+
+    Order {
+        sort_items: Vec<(Expression, Option<String>)>,
     },
 
     /// Match
@@ -180,7 +199,7 @@ cypher_nodes_impl! {
     Match {
         is_optional: bool,
         pattern: Box<CypherNode>,
-        where_clause: Option<Box<CypherNode>>,
+        where_clause: Option<Expression>,
     },
 
     /// Unwind : UNWIND Expression AS Variable
@@ -195,6 +214,31 @@ cypher_nodes_impl! {
         yield_items: Vec<Box<CypherNode>>,
     },
 
+    /// Create
+    Create {
+        pattern: Box<CypherNode>,
+    },
+
+    /// Merge
+    Merge {
+
+    },
+
+    /// Delete
+    Delete {
+
+    },
+
+    /// Set
+    Set {
+
+    },
+
+    /// Remove
+    Remove {
+
+    },
+
     /// Pattern
     ///
     /// Vec<PatternPart>
@@ -207,21 +251,33 @@ cypher_nodes_impl! {
     /// Variable = AnonymousPatternPart
     /// AnonymousPatternPart : PatternElement
     PatternPart {
-        var: Variable,
+        var: Option<Variable>,
         pattern_element: Box<CypherNode>,
     },
 
     /// PatternElement
     ///
-    /// Vec<(NodePattern, Vec<PatternElementChain>)>
+    /// Vec<(NodePattern, Vec<(RelationShipPattern, NodePattern)>)>
     PatternElement {
-        pattern_element: Vec<(Box<CypherNode>, Vec<Box<CypherNode>>)>,
+        parentheses: i32,
+        pattern_element: (Box<CypherNode>, Vec<(Box<CypherNode>, Box<CypherNode>)>),
     },
 
-    /// NodePattern
+    /// NodePattern: properties: Literal|Parameter
     NodePattern {
         var: Option<Variable>,
-        labels: Vec<NodeLabel>,
+        vertex_labels: Vec<NodeLabel>,
+        properties: Option<Properties>,
+    },
+
+    /// RelationshipPattern: [variable :label|:label * 1..2 properties]
+    RelationshipPattern {
+        direction: RelationshipDirection,
+        var: Option<Variable>,
+        edge_labels: Vec<NodeLabel>,
+        range_start: i32,
+        range_end: i32,
+        properties: Option<Properties>,
     },
 }
 

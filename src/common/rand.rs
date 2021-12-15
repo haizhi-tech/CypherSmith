@@ -16,7 +16,7 @@ impl RandomGenerator {
     pub fn new() -> RandomGenerator {
         RandomGenerator {
             rng: thread_rng(),
-            uniform_d2: Uniform::new(0,2),
+            uniform_d2: Uniform::new(0, 2),
             uniform_d6: Uniform::new(0, 6),
             uniform_d9: Uniform::new(0, 9),
             uniform_d12: Uniform::new(0, 12),
@@ -52,6 +52,22 @@ impl RandomGenerator {
 
     pub fn d100(&mut self) -> i32 {
         self.rng.sample(self.uniform_d100)
+    }
+
+    pub fn bool(&mut self) -> bool {
+        if self.d2() > 0 {
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn low_prob_bool(&mut self) -> bool {
+        if self.d12() > 0 {
+            false
+        } else {
+            true
+        }
     }
 }
 
