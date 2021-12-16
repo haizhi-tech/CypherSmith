@@ -1,5 +1,6 @@
 use rand::{distributions::Uniform, rngs::ThreadRng, thread_rng, Rng};
 
+// todo: need to modify, generator integet from 1 not 0.
 #[derive(Clone)]
 pub struct RandomGenerator {
     rng: ThreadRng,

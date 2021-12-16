@@ -1,6 +1,5 @@
 use super::expr::{
-    Expression, IntegerLiteral, NodeLabel, Paramter, Properties, RelationshipDirection,
-    SymbolicName, Variable,
+    Expression, NodeLabel, Properties, PropertyExpression, RelationshipDirection, Variable,
 };
 
 use paste::paste;
@@ -221,22 +220,28 @@ cypher_nodes_impl! {
 
     /// Merge
     Merge {
-
+        pattern_part: Box<CypherNode>,
+        merge_actions: Vec<Box<CypherNode>>,
     },
 
     /// Delete
     Delete {
-
+        is_detach: bool,
+        expressions: Vec<Expression>,
     },
 
     /// Set
     Set {
-
+        property_set: Vec<(PropertyExpression, Expression)>,
+        variable_set: Vec<(Variable, Expression)>,
+        variable_add: Vec<(Variable, Expression)>,
+        label_set: Vec<(Variable, Vec<NodeLabel>)>,
     },
 
     /// Remove
     Remove {
-
+        variable_remove: Vec<(Variable, Vec<NodeLabel>)>,
+        property_remove: Vec<PropertyExpression>,
     },
 
     /// Pattern
@@ -271,6 +276,7 @@ cypher_nodes_impl! {
     },
 
     /// RelationshipPattern: [variable :label|:label * 1..2 properties]
+    /// todo: need to modify: nodelabel -> edgelabel.
     RelationshipPattern {
         direction: RelationshipDirection,
         var: Option<Variable>,

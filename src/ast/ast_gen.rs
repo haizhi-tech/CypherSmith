@@ -1,6 +1,9 @@
 use super::{
     cypher::{CypherNode, CypherNodeVisitor},
-    expr::{Expression, NodeLabel, Properties, RelationshipDirection, VariableGenerator},
+    expr::{
+        Expression, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
+        VariableGenerator,
+    },
 };
 use crate::common::RandomGenerator;
 
@@ -327,7 +330,6 @@ impl CypherNodeVisitor for CypherGenerator {
 
     // todo: need implementation.
     fn visit_in_query_call(&mut self) -> Self::Output {
-        // todo!()
         (CypherNode::StandaloneCall {}, "in_query_call".to_string())
     }
 
@@ -363,24 +365,180 @@ impl CypherNodeVisitor for CypherGenerator {
         )
     }
 
-    // todo
+    // merge: MERGE pattern_part (merge_action)*; merge_action: on match|create set.
     fn visit_merge(&mut self) -> Self::Output {
-        todo!()
+        let mut merge_string = "Merge ".to_string();
+
+        let (pattern_part_node, pattern_part_string) = self.visit_pattern_part();
+        merge_string += &pattern_part_string;
+        let pattern_part = Box::new(pattern_part_node);
+
+        let mut merge_actions = Vec::new();
+
+        for _ in 0..self.random.d2() {
+            merge_string += " ";
+            let (merge_action, merge_action_string) = self.visit_set();
+            if self.random.bool() {
+                // ON MATCH Set
+                merge_string += "ON MATCH ";
+            } else {
+                // ON CREATE Set
+                merge_string += "ON CREATE ";
+            }
+            merge_string += &merge_action_string;
+            merge_actions.push(Box::new(merge_action));
+        }
+
+        (
+            CypherNode::Merge {
+                pattern_part,
+                merge_actions,
+            },
+            merge_string,
+        )
     }
 
-    // todo
+    // delete: detach? delete Vec<expressions>
     fn visit_delete(&mut self) -> Self::Output {
-        todo!()
+        let mut delete_string = String::new();
+
+        let is_detach = if self.random.bool() {
+            delete_string += "DETACH DELETE ";
+            true
+        } else {
+            delete_string += "DELETE ";
+            false
+        };
+
+        // todo: need to modify: delete existing expression.
+        let mut expressions = Vec::new();
+        let expression = Expression::new();
+        delete_string += &expression.get_name();
+        expressions.push(expression);
+
+        for _ in 0..self.random.d2() {
+            let expression = Expression::new();
+            delete_string += &expression.get_name();
+            expressions.push(expression);
+        }
+
+        (
+            CypherNode::Delete {
+                is_detach,
+                expressions,
+            },
+            delete_string,
+        )
     }
 
-    // todo
+    // set: set (property = Expression | Variable = Expression | Variable += Expression | Variable = NodeLabels)*
     fn visit_set(&mut self) -> Self::Output {
-        todo!()
+        let mut set_string = "SET ".to_string();
+        let mut property_set = vec![];
+        let mut variable_set = vec![];
+        let mut variable_add = vec![];
+        let mut label_set = vec![];
+
+        // first set_item
+        match self.random.d6() {
+            0 => {
+                let property = PropertyExpression::new();
+                let expression = Expression::new();
+                set_string += &property.get_name();
+                set_string += "=";
+                set_string += &expression.get_name();
+                property_set.push((property, expression));
+            }
+            1 => {
+                let variable = self.variables.get_old_variable();
+                let expression = Expression::new();
+                set_string += &variable.get_name();
+                if self.random.bool() {
+                    set_string += "=";
+                    set_string += &expression.get_name();
+                    variable_set.push((variable, expression));
+                } else {
+                    set_string += "+=";
+                    set_string += &expression.get_name();
+                    variable_add.push((variable, expression));
+                }
+            }
+            2 => {
+                let variable = self.variables.get_old_variable();
+                set_string += &variable.get_name();
+                set_string += " ";
+                // NodeLabels: NodeLabel+
+                let mut node_labels = vec![];
+                let first_label = NodeLabel::new();
+                set_string += ":";
+                set_string += &first_label.get_name();
+                node_labels.push(first_label);
+
+                for _ in 0..self.random.d2() {
+                    let node_label = NodeLabel::new();
+                    set_string += " :";
+                    set_string += &node_label.get_name();
+                    node_labels.push(node_label);
+                }
+                label_set.push((variable, node_labels));
+            }
+            _ => {}
+        }
+
+        // todo: repeat above operator.
+        for _ in 0..self.random.d2() {}
+
+        (
+            CypherNode::Set {
+                property_set,
+                variable_set,
+                variable_add,
+                label_set,
+            },
+            set_string,
+        )
     }
 
-    // todo
+    // remove: remove (variable Nodelabel* | PropertyExpression)+
     fn visit_remove(&mut self) -> Self::Output {
-        todo!()
+        let mut remove_string = "REMOVE ".to_string();
+        let mut variable_remove = vec![];
+        let mut property_remove = vec![];
+
+        if self.random.bool() {
+            let variable = self.variables.get_old_variable();
+            remove_string += &variable.get_name();
+            remove_string += " ";
+
+            let mut node_labels = vec![];
+            let first_label = NodeLabel::new();
+            remove_string += ":";
+            remove_string += &first_label.get_name();
+            node_labels.push(first_label);
+
+            for _ in 0..self.random.d2() {
+                let node_label = NodeLabel::new();
+                remove_string += " :";
+                remove_string += &node_label.get_name();
+                node_labels.push(node_label);
+            }
+            variable_remove.push((variable, node_labels));
+        } else {
+            let property_expression = PropertyExpression::new();
+            remove_string += &property_expression.get_name();
+            property_remove.push(property_expression);
+        }
+
+        // todo: repeat above operator.
+        for _ in 0..self.random.d2() {}
+
+        (
+            CypherNode::Remove {
+                variable_remove,
+                property_remove,
+            },
+            remove_string,
+        )
     }
 
     /// Return clause: return projection_body.

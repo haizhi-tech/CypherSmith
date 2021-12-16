@@ -29,6 +29,7 @@ pub struct VariableGenerator {
     number: u32,
 }
 
+// todo: need to modify. Variable manage and check.
 impl VariableGenerator {
     pub fn new() -> Self {
         VariableGenerator {
@@ -44,6 +45,10 @@ impl VariableGenerator {
 
     pub fn new_variable(&mut self) -> Variable {
         self.number += 1u32;
+        Variable::new(self.variable_name.clone() + &self.number.to_string())
+    }
+
+    pub fn get_old_variable(&mut self) -> Variable {
         Variable::new(self.variable_name.clone() + &self.number.to_string())
     }
 }
@@ -101,10 +106,29 @@ impl Expression {
 }
 
 #[derive(Debug, Default)]
+pub struct PropertyExpression {
+    expression_name: String,
+}
+
+// todo: need to implementation.
+impl PropertyExpression {
+    pub fn new() -> Self {
+        PropertyExpression {
+            expression_name: "a.age".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.expression_name.clone()
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct NodeLabel {
     label_name: String,
 }
 
+// todo: need to implementation get old nodelabel.
 impl NodeLabel {
     pub fn new() -> Self {
         // let label_name = if random.d12() < 6 { // Variable name
