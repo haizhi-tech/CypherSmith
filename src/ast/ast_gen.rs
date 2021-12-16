@@ -1,7 +1,7 @@
 use super::{
     cypher::{CypherNode, CypherNodeVisitor},
     expr::{
-        Expression, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
+        Expression, NameSpace, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
         VariableGenerator,
     },
 };
@@ -253,6 +253,118 @@ impl CypherNodeVisitor for CypherGenerator {
         )
     }
 
+    // in_query_call: call procedure.
+    fn visit_in_query_call(&mut self) -> Self::Output {
+        let mut in_query_call_string = "CALL ".to_string();
+        let (procedure_node, procedure_string) = self.visit_explicit_procedure_invocation();
+        in_query_call_string += &procedure_string;
+
+        // YieldItems
+        let yield_items = if self.random.bool() {
+            let (yield_items_node, yield_items_string) = self.visit_yield_items();
+            in_query_call_string += " YIELD ";
+            in_query_call_string += &yield_items_string;
+            Some(Box::new(yield_items_node))
+        } else {
+            None
+        };
+
+        (
+            CypherNode::InQueryCall {
+                explicit_proceduce_invocation: Box::new(procedure_node),
+                yield_items,
+            },
+            in_query_call_string,
+        )
+    }
+
+    fn visit_explicit_procedure_invocation(&mut self) -> Self::Output {
+        let mut procedure_string = String::new();
+        let name_space = NameSpace::new();
+        let symbolic_name = self.variables.get_procedure_method();
+        procedure_string += &name_space.get_name();
+        procedure_string += ".";
+        procedure_string += &symbolic_name.get_name();
+        procedure_string += "(";
+
+        // expressions generator.
+        let mut expressions = Vec::new();
+        if self.random.bool() {
+            let expression = Expression::new();
+            procedure_string += &expression.get_name();
+            expressions.push(expression);
+
+            for _ in 0..self.random.d2() {
+                let expression = Expression::new();
+                procedure_string += ",";
+                procedure_string += &expression.get_name();
+                expressions.push(expression);
+            }
+        }
+        procedure_string += ")";
+
+        (
+            CypherNode::ExplicitProcedureInvocation {
+                procedure_name: (name_space, symbolic_name),
+                expressions,
+            },
+            procedure_string,
+        )
+    }
+
+    fn visit_yield_items(&mut self) -> Self::Output {
+        let mut yield_items_string = String::new();
+
+        let mut yield_items = vec![];
+
+        // first yield_item: (ProcedureResultField AS)* variable.
+        let first_variable = self.variables.new_variable();
+        if self.random.bool() {
+            let procedure_result = self.variables.get_procedure_result();
+            yield_items_string += &procedure_result.get_name();
+            yield_items_string += " AS ";
+            yield_items_string += &first_variable.get_name();
+            yield_items.push((Some(procedure_result), first_variable));
+        } else {
+            yield_items_string += &first_variable.get_name();
+            yield_items.push((None, first_variable));
+        }
+
+        // yield_item*
+        for _ in 0..self.random.d2() {
+            yield_items_string += ",";
+            let variable = self.variables.new_variable();
+            if self.random.bool() {
+                let procedure_result = self.variables.get_procedure_result();
+                yield_items_string += &procedure_result.get_name();
+                yield_items_string += " AS ";
+                yield_items_string += &variable.get_name();
+                yield_items.push((Some(procedure_result), variable));
+            } else {
+                yield_items_string += &variable.get_name();
+                yield_items.push((None, variable));
+            }
+        }
+
+        // where_clause
+        let where_clause = if self.random.bool() {
+            let where_expression = Expression::new();
+            yield_items_string += " WHERE ";
+            yield_items_string += &where_expression.get_name();
+            Some(where_expression)
+        } else {
+            None
+        };
+
+        (
+            CypherNode::YieldItems {
+                yield_items,
+                where_clause,
+            },
+            yield_items_string,
+        )
+    }
+
     fn visit_reading_clause(&mut self) -> Self::Output {
         let (reading_clause, reading_string) = match self.random.d6() {
             0 => self.visit_match(),
@@ -326,11 +438,6 @@ impl CypherNodeVisitor for CypherGenerator {
             },
             unwind_string,
         )
-    }
-
-    // todo: need implementation.
-    fn visit_in_query_call(&mut self) -> Self::Output {
-        (CypherNode::StandaloneCall {}, "in_query_call".to_string())
     }
 
     fn visit_updating_clause(&mut self) -> Self::Output {
@@ -418,6 +525,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         for _ in 0..self.random.d2() {
             let expression = Expression::new();
+            delete_string += ",";
             delete_string += &expression.get_name();
             expressions.push(expression);
         }

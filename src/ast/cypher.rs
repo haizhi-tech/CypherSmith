@@ -1,5 +1,6 @@
 use super::expr::{
-    Expression, NodeLabel, Properties, PropertyExpression, RelationshipDirection, Variable,
+    Expression, NameSpace, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
+    Variable,
 };
 
 use paste::paste;
@@ -210,7 +211,7 @@ cypher_nodes_impl! {
     /// InQueryCall
     InQueryCall {
         explicit_proceduce_invocation: Box<CypherNode>,
-        yield_items: Vec<Box<CypherNode>>,
+        yield_items: Option<Box<CypherNode>>,
     },
 
     /// Create
@@ -236,6 +237,20 @@ cypher_nodes_impl! {
         variable_set: Vec<(Variable, Expression)>,
         variable_add: Vec<(Variable, Expression)>,
         label_set: Vec<(Variable, Vec<NodeLabel>)>,
+    },
+
+    /// ExplicitProcedureInvocation
+    ExplicitProcedureInvocation {
+        // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
+        procedure_name: (NameSpace, Variable),
+        expressions: Vec<Expression>,
+    },
+
+    /// YieldItems
+    YieldItems {
+        // todo: need to modify ProecdureResultField result.
+        yield_items: Vec<(Option<Variable>, Variable)>,
+        where_clause: Option<Expression>,
     },
 
     /// Remove

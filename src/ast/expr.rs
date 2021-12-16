@@ -51,6 +51,14 @@ impl VariableGenerator {
     pub fn get_old_variable(&mut self) -> Variable {
         Variable::new(self.variable_name.clone() + &self.number.to_string())
     }
+
+    pub fn get_procedure_method(&mut self) -> Variable {
+        Variable::new("shortestPath".to_string())
+    }
+
+    pub fn get_procedure_result(&mut self) -> Variable {
+        Variable::new("procedure_result".to_string())
+    }
 }
 
 #[derive(Debug, Default)]
@@ -67,6 +75,23 @@ impl Properties {
 
     pub fn get_name(&self) -> String {
         self.property_name.clone()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct NameSpace {
+    name_space: String,
+}
+
+impl NameSpace {
+    pub fn new() -> Self {
+        NameSpace {
+            name_space: "atlas".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name_space.clone()
     }
 }
 
@@ -96,7 +121,7 @@ pub struct Expression {
 impl Expression {
     pub fn new() -> Self {
         Expression {
-            expression_name: "a".to_string(),
+            expression_name: "expression(WIP)".to_string(),
         }
     }
 
