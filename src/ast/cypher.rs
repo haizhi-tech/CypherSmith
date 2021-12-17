@@ -118,7 +118,8 @@ cypher_nodes_impl! {
 
     /// StandaloneCall
     StandaloneCall {
-
+        procedure: Box<CypherNode>,
+        yield_items: (bool, Option<Box<CypherNode>>),
     },
 
     /// SingleQuery
@@ -244,6 +245,12 @@ cypher_nodes_impl! {
         // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
         expressions: Vec<Expression>,
+    },
+
+    /// ImplicitProcedureInvocation
+    ImplicitProcedureInvocation {
+        // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
+        procedure_name: (NameSpace, Variable),
     },
 
     /// YieldItems

@@ -69,7 +69,7 @@ pub struct Properties {
 impl Properties {
     pub fn new() -> Self {
         Properties {
-            property_name: "property1".to_string(),
+            property_name: "property(WIP)".to_string(),
         }
     }
 

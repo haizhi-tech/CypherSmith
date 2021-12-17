@@ -29,6 +29,10 @@ impl CypherGenerator {
         self.query_string = query_string;
         cypher_node
     }
+
+    pub fn visit_atom_expression(&mut self) -> String {
+        "atom_expression".to_string()
+    }
 }
 
 impl CypherNodeVisitor for CypherGenerator {
@@ -76,9 +80,37 @@ impl CypherNodeVisitor for CypherGenerator {
         )
     }
 
-    // todo: need to implementation.
     fn visit_standalone_call(&mut self) -> Self::Output {
-        self.visit_regular_query()
+        let mut standalone_call_string = "CALL ".to_string();
+
+        let (procedure_node, procedure_string) = if self.random.bool() {
+            self.visit_explicit_procedure_invocation()
+        } else {
+            self.visit_implicit_procedure_invocation()
+        };
+        standalone_call_string += &procedure_string;
+
+        let yield_items = if self.random.bool() {
+            standalone_call_string += " YIELD ";
+            if self.random.bool() {
+                standalone_call_string += "*";
+                (true, None)
+            } else {
+                let (yield_node, yield_string) = self.visit_yield_items();
+                standalone_call_string += &yield_string;
+                (true, Some(Box::new(yield_node)))
+            }
+        } else {
+            (false, None)
+        };
+
+        (
+            CypherNode::StandaloneCall {
+                procedure: Box::new(procedure_node),
+                yield_items,
+            },
+            standalone_call_string,
+        )
     }
 
     fn visit_union(&mut self) -> Self::Output {
@@ -237,7 +269,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let where_clause = if self.random.bool() {
             let where_expression = Expression::new();
-            with_string += " WHERE";
+            with_string += " WHERE ";
             with_string += &where_expression.get_name();
             Some(where_expression)
         } else {
@@ -307,6 +339,21 @@ impl CypherNodeVisitor for CypherGenerator {
             CypherNode::ExplicitProcedureInvocation {
                 procedure_name: (name_space, symbolic_name),
                 expressions,
+            },
+            procedure_string,
+        )
+    }
+
+    fn visit_implicit_procedure_invocation(&mut self) -> Self::Output {
+        let mut procedure_string = String::new();
+        let name_space = NameSpace::new();
+        let symbolic_name = self.variables.get_procedure_method();
+        procedure_string += &name_space.get_name();
+        procedure_string += ".";
+        procedure_string += &symbolic_name.get_name();
+        (
+            CypherNode::ImplicitProcedureInvocation {
+                procedure_name: (name_space, symbolic_name),
             },
             procedure_string,
         )
@@ -853,9 +900,9 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut pattern_element_string = String::new();
         let parentheses_number = self.random.d2();
 
-        for _ in 0..parentheses_number {
-            pattern_element_string += "(";
-        }
+        // for _ in 0..parentheses_number {
+        //     pattern_element_string += "(";
+        // }
 
         let (node_pattern_node, node_pattern_string) = self.visit_node_pattern();
         let node_pattern = Box::new(node_pattern_node);
@@ -874,9 +921,9 @@ impl CypherNodeVisitor for CypherGenerator {
             pattern_element_chain.push((Box::new(relationship_node), Box::new(node)));
         }
 
-        for _ in 0..parentheses_number {
-            pattern_element_string += ")";
-        }
+        // for _ in 0..parentheses_number {
+        //     pattern_element_string += ")";
+        // }
 
         // let x = (0..parentheses_number).into_iter().map(|_| ")").collect::<String>();
         (
@@ -986,6 +1033,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let properties = if self.random.bool() {
             let properties = Properties::new();
+            relationship_pattern_string += " ";
             relationship_pattern_string += &properties.get_name();
             Some(properties)
         } else {
