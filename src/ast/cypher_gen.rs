@@ -1,11 +1,8 @@
-use super::{
-    cypher::{CypherNode, CypherNodeVisitor},
-    expr::{
-        Expression, NameSpace, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
-        VariableGenerator,
-    },
+use super::cypher::{CypherNode, CypherNodeVisitor};
+use crate::common::{
+    Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression, RandomGenerator,
+    RelationshipDirection, SchemaName, VariableGenerator,
 };
-use crate::common::RandomGenerator;
 
 pub struct CypherGenerator {
     query_string: String,
@@ -30,8 +27,12 @@ impl CypherGenerator {
         cypher_node
     }
 
-    pub fn visit_atom_expression(&mut self) -> String {
-        "atom_expression".to_string()
+    pub fn visit_expression(&mut self) -> String {
+        self.visit_property_or_labels_expression().1
+    }
+
+    pub fn get_current_query_string(&mut self) -> String {
+        self.query_string.clone()
     }
 }
 
@@ -40,8 +41,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     /// query: regular_query | standaloneCall
     fn visit_query(&mut self) -> Self::Output {
-        let ty = self.random.d2();
-        let (query, query_string) = if ty != 0 {
+        let (query, query_string) = if self.random.bool() {
             self.visit_regular_query()
         } else {
             self.visit_standalone_call()
@@ -62,12 +62,11 @@ impl CypherNodeVisitor for CypherGenerator {
 
         query_string += &single_query_string;
 
-        let union_number = self.random.d2();
         let mut union_all = vec![];
-        for _ in 0..union_number {
+        for _ in 0..self.random.d2() {
             let (single_union, single_union_string) = self.visit_union();
             union_all.push(Box::new(single_union));
-            query_string += "\n";
+            query_string += " ";
             query_string += &single_union_string;
         }
 
@@ -1053,6 +1052,328 @@ impl CypherNodeVisitor for CypherGenerator {
             relationship_pattern_string,
         )
     }
+
+    // PropertyOrLabelsExpression: use to generate exprssion
+    fn visit_property_or_labels_expression(&mut self) -> Self::Output {
+        let mut expression_string = String::new();
+        // atom: Literal
+        let (atom_node, atom_string) = self.visit_atom();
+        expression_string += &atom_string;
+
+        let mut property_lookups = vec![];
+        // PropertyLookUp*
+        for _ in 0..self.random.d2() {
+            expression_string += " .";
+            let property_lookup = SchemaName::new(&mut self.random);
+            expression_string += &property_lookup.get_name();
+            property_lookups.push(property_lookup);
+        }
+
+        let mut node_labels = vec![];
+        for _ in 0..self.random.d2() {
+            let node_label = NodeLabel::new();
+            expression_string += " :";
+            expression_string += &node_label.get_name();
+            node_labels.push(node_label);
+        }
+
+        (
+            CypherNode::PropertyOrLabelsExpression {
+                atom: Box::new(atom_node),
+                property_lookups,
+                node_labels,
+            },
+            expression_string,
+        )
+    }
+
+    fn visit_atom(&mut self) -> Self::Output {
+        let mut atom_string = String::new();
+
+        let (literal, expressions, sub_expression, is_variable) = match self.random.d20() % 15 {
+            // Literal
+            0 => {
+                let literal = Literal::Integer(1);
+                (Some(literal), vec![], None, None)
+            }
+            // Parameter: $ SymbolicName|Integer
+            1 => {
+                atom_string += "$";
+                let variable = self.variables.get_symbolic_or_integer();
+                atom_string += &variable.get_name();
+                (None, vec![], None, Some(variable))
+            }
+            // CaseExpression: CASE expression? (WHEN expression THEN expression)+ (ELSE expression)? END
+            2 => {
+                atom_string += "CASE";
+                let mut expressions = vec![];
+                if self.random.bool() {
+                    let expression = Expression::new();
+                    atom_string += " ";
+                    atom_string += &expression.get_name();
+                    expressions.push(expression)
+                }
+
+                for _ in 0..(self.random.d2() + 1) {
+                    atom_string += " WHEN ";
+                    let when_expression = Expression::new();
+                    atom_string += &when_expression.get_name();
+                    let then_expression = Expression::new();
+                    atom_string += " THEN ";
+                    atom_string += &then_expression.get_name();
+                    expressions.push(when_expression);
+                    expressions.push(then_expression);
+                }
+
+                if self.random.bool() {
+                    let expression = Expression::new();
+                    atom_string += "ELSE ";
+                    atom_string += &expression.get_name();
+                    expressions.push(expression)
+                }
+
+                atom_string += " END";
+                (None, expressions, None, None)
+            }
+            // `COUNT`
+            3 => {
+                atom_string += "COUNT (*)";
+                (None, vec![], None, None)
+            }
+            // ListComprehension: [FilterExpression (| Expression)?]
+            4 => {
+                atom_string += "[";
+                let mut expressions = vec![];
+
+                let (filter_node, filter_string) = self.visit_filter_expression();
+                atom_string += &filter_string;
+
+                if self.random.bool() {
+                    atom_string += "|";
+                    let expression = Expression::new();
+                    atom_string += &expression.get_name();
+                    expressions.push(expression)
+                }
+
+                (None, expressions, Some(Box::new(filter_node)), None)
+            }
+            // PatternComprehension: [ (Variable =)? RelationshipsPattern (where Expression)? | Expression]
+            5 => {
+                atom_string += "[";
+                // true = is variable
+                let variable = if self.random.bool() {
+                    let is_variable = self.variables.new_variable();
+                    atom_string += &is_variable.get_name();
+                    atom_string += "=";
+                    Some(is_variable)
+                } else {
+                    None
+                };
+                let (relationships_node, relationships_string) = self.visit_relationships_pattern();
+                atom_string += &relationships_string;
+
+                atom_string += " ";
+
+                let mut expressions = vec![];
+                // is where clause
+                if self.random.bool() {
+                    let where_expression = Expression::new();
+                    atom_string += "WHERE ";
+                    atom_string += &where_expression.get_name();
+                    expressions.push(where_expression)
+                }
+                atom_string += "| ";
+                let expression = Expression::new();
+                atom_string += &expression.get_name();
+                atom_string += "]";
+                (
+                    None,
+                    expressions,
+                    Some(Box::new(relationships_node)),
+                    variable,
+                )
+            }
+            // (ALL|ANY|NONE|SINGLE) ( FilterExpression )
+            6 | 7 | 8 | 9 => {
+                let rel = vec!["ALL", "ANY", "SINGLE", "NONE"];
+                let (filter_expression, filter_expression_string) = self.visit_filter_expression();
+                atom_string += rel[(self.random.d6() % 3) as usize];
+                atom_string += "(";
+                atom_string += &filter_expression_string;
+                atom_string += ")";
+
+                (None, vec![], Some(Box::new(filter_expression)), None)
+            }
+            // RelationshipsPattern： NodePattern (RelationShipPattern, NodePattern)*
+            10 => {
+                let (relationships_node, relationships_string) = self.visit_relationships_pattern();
+                atom_string += &relationships_string;
+                (None, vec![], Some(Box::new(relationships_node)), None)
+            }
+            // ParenthesizedExpression: ( Expression )
+            11 => {
+                let expression = Expression::new();
+                atom_string += "(";
+                atom_string += &expression.get_name();
+                atom_string += ")";
+
+                (None, vec![expression], None, None)
+            }
+            // FunctionInvocation
+            12 => {
+                let (function_node, function_string) = self.visit_function_invocation();
+                atom_string += &function_string;
+                (None, vec![], Some(Box::new(function_node)), None)
+            }
+            // ExistentialSubquery
+            13 => {
+                atom_string += "EXISTS {";
+                if self.random.bool() {
+                    let (regular_node, regular_string) = self.visit_regular_query();
+                    atom_string += &regular_string;
+                    atom_string += "}";
+                    (None, vec![], Some(Box::new(regular_node)), None)
+                } else {
+                    let (pattern_node, pattern_string) = self.visit_pattern();
+                    let where_expression = Expression::new();
+                    atom_string += &pattern_string;
+                    atom_string += " WHERE ";
+                    atom_string += &where_expression.get_name();
+                    atom_string += "}";
+                    (
+                        None,
+                        vec![where_expression],
+                        Some(Box::new(pattern_node)),
+                        None,
+                    )
+                }
+            }
+            // Variable
+            14 => {
+                let variable = self.variables.get_old_variable();
+                atom_string += &variable.get_name();
+                (None, vec![], None, Some(variable))
+            }
+            _ => (None, vec![], None, None),
+        };
+
+        (
+            CypherNode::Atom {
+                literal,
+                expressions,
+                sub_expression,
+                is_variable,
+            },
+            atom_string,
+        )
+    }
+
+    // filter expression.
+    fn visit_filter_expression(&mut self) -> Self::Output {
+        let mut filter_expression_string = String::new();
+        let variable = self.variables.new_variable();
+        let expression = Expression::new();
+        filter_expression_string += &variable.get_name();
+        filter_expression_string += " IN ";
+        filter_expression_string += &expression.get_name();
+
+        let where_clause = if self.random.bool() {
+            let expr = Expression::new();
+            filter_expression_string += " WHERE ";
+            filter_expression_string += &expr.get_name();
+            Some(expr)
+        } else {
+            None
+        };
+
+        (
+            CypherNode::FilterExpression {
+                id_in_coll: (variable, expression),
+                where_clause,
+            },
+            filter_expression_string,
+        )
+    }
+
+    // RelationShipsPattern
+    fn visit_relationships_pattern(&mut self) -> Self::Output {
+        let mut relationships_string = String::new();
+
+        let (node_pattern_node, node_pattern_string) = self.visit_node_pattern();
+        let node_pattern = Box::new(node_pattern_node);
+        relationships_string += &node_pattern_string;
+
+        let mut pattern_element_chain = vec![];
+        for _ in 0..(self.random.d2() + 1) {
+            relationships_string += " ";
+            let (relationship_node, relationship_string) = self.visit_relationship_pattern();
+            relationships_string += &relationship_string;
+
+            relationships_string += " ";
+            let (node, node_string) = self.visit_node_pattern();
+            relationships_string += &node_string;
+
+            pattern_element_chain.push((Box::new(relationship_node), Box::new(node)));
+        }
+
+        (
+            CypherNode::RelationshipsPattern {
+                node_pattern,
+                pattern_element_chain,
+            },
+            relationships_string,
+        )
+    }
+
+    // FunctionInvocation
+    fn visit_function_invocation(&mut self) -> Self::Output {
+        let mut function_string = String::new();
+
+        let is_exists = if self.random.bool() {
+            function_string += "EXISTS";
+            (true, None)
+        } else {
+            // todo: need to modify because namespace is *
+            let name_space = NameSpace::new();
+            let variable = self.variables.get_procedure_method();
+            function_string += &name_space.get_name();
+            function_string += ".";
+            function_string += &variable.get_name();
+
+            (false, Some((name_space, variable)))
+        };
+
+        function_string += "(";
+        let is_distinct = if self.random.bool() {
+            function_string += "DISTINCT ";
+            true
+        } else {
+            false
+        };
+
+        let mut expressions = vec![];
+        if self.random.bool() {
+            let expression = Expression::new();
+            function_string += &expression.get_name();
+            expressions.push(expression);
+            for _ in 0..self.random.d2() {
+                let expression = Expression::new();
+                function_string += ", ";
+                function_string += &expression.get_name();
+                expressions.push(expression);
+            }
+        }
+        function_string += ")";
+
+        (
+            CypherNode::FunctionInvocation {
+                is_exists,
+                is_distinct,
+                expressions,
+            },
+            function_string,
+        )
+    }
 }
 
 #[cfg(test)]
@@ -1065,5 +1386,12 @@ mod tests {
         let mut generator = CypherGenerator::new();
         generator.visit();
         println!("{}", generator.query_string);
+    }
+
+    #[test]
+    fn property_or_labels_expression_test() {
+        let mut generator = CypherGenerator::new();
+        let expression_string = generator.visit_expression();
+        println!("{}", expression_string);
     }
 }

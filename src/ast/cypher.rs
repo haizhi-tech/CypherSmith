@@ -1,6 +1,6 @@
-use super::expr::{
-    Expression, NameSpace, NodeLabel, Properties, PropertyExpression, RelationshipDirection,
-    Variable,
+use crate::common::{
+    Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression,
+    RelationshipDirection, SchemaName, Variable,
 };
 
 use paste::paste;
@@ -305,6 +305,45 @@ cypher_nodes_impl! {
         edge_labels: Vec<NodeLabel>,
         range: (Option<i32>, Option<i32>),
         properties: Option<Properties>,
+    },
+
+    /// Expression relation.
+    ///
+    /// PropertyOrLabelsExpression: Atom (PropertyLookUp)* NodeLabels? (=NodeLabel*)
+    PropertyOrLabelsExpression {
+        atom: Box<CypherNode>,
+        property_lookups: Vec<SchemaName>,
+        node_labels: Vec<NodeLabel>,
+    },
+
+    /// Atom
+    ///
+    Atom {
+        literal: Option<Literal>,
+        expressions: Vec<Expression>,
+        sub_expression: Option<Box<CypherNode>>,
+        is_variable: Option<Variable>,
+    },
+
+    /// FilterExpression:
+    ///
+    FilterExpression {
+        id_in_coll: (Variable, Expression),
+        where_clause: Option<Expression>,
+    },
+
+    /// RelationshipsPattern
+    ///
+    RelationshipsPattern {
+        node_pattern: Box<CypherNode>,
+        pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
+    },
+
+    /// FunctionInvocation
+    FunctionInvocation {
+        is_exists: (bool, Option<(NameSpace, Variable)>),
+        is_distinct: bool,
+        expressions: Vec<Expression>,
     },
 }
 

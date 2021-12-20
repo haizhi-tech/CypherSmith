@@ -1,6 +1,5 @@
-use crate::ast::{ExpressionNodeVisitor, CypherGenerator};
-
-use crate::common::RandomGenerator;
+use super::{CypherGenerator, ExpressionNodeVisitor};
+use crate::common::{NodeLabel, RandomGenerator};
 
 pub struct ExprGenVisitor<'a> {
     expr_string: String,
@@ -8,15 +7,15 @@ pub struct ExprGenVisitor<'a> {
     cypher: &'a mut CypherGenerator,
 }
 
-// impl ExprGenVisitor<'_> {
-//     pub fn new (cypher: &mut CypherGenerator) -> Self {
-//         ExprGenVisitor {
-//             random: RandomGenerator::new(),
-//             expr_string: String::new(),
-//             cypher,
-//         }
-//     }
-// }
+impl<'a> ExprGenVisitor<'a> {
+    pub fn new(cypher: &'a mut CypherGenerator) -> ExprGenVisitor<'a> {
+        ExprGenVisitor {
+            random: RandomGenerator::new(),
+            expr_string: String::new(),
+            cypher,
+        }
+    }
+}
 
 impl ExprGenVisitor<'_> {
     pub fn visit(&mut self) -> String {
@@ -29,8 +28,7 @@ impl ExprGenVisitor<'_> {
     }
 
     pub fn visit_atom(&mut self) -> String {
-        let x = self.cypher.visit_atom_expression();
-        x
+        self.cypher.visit_expression()
     }
 }
 
@@ -180,8 +178,23 @@ impl ExpressionNodeVisitor for ExprGenVisitor<'_> {
         ret
     }
 
+    // property_or_labels_expression: atom property_look_up* nodelabels?(nodelabels*)
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
-        "property(WIP)".to_string()
+        // atom
+        let mut ret = self.visit_atom();
+        // property*: "."
+        for _ in 0..self.random.d2() {
+            ret += ".";
+            ret += "SchemaName(WIP)";
+        }
+
+        // NodeLabels:
+        for _ in 0..self.random.d2() {
+            let node_label = NodeLabel::new();
+            ret += &node_label.get_name();
+        }
+
+        ret
     }
 
     fn visit_string_operator_expression(&mut self) -> Self::Output {
@@ -252,11 +265,11 @@ impl ExpressionNodeVisitor for ExprGenVisitor<'_> {
 mod tests {
 
     use super::ExprGenVisitor;
-    use crate::common::RandomGenerator;
     use crate::ast::CypherGenerator;
+    use crate::common::RandomGenerator;
 
     #[test]
-    fn test_new() {
+    fn test_expression() {
         let mut cypher_generator = CypherGenerator::new();
         let mut x = ExprGenVisitor {
             random: RandomGenerator::new(),
@@ -264,6 +277,18 @@ mod tests {
             cypher: &mut cypher_generator,
         };
         let ans = x.visit();
+        println!("{}", ans);
+    }
+
+    #[test]
+    fn test_atom() {
+        let mut cypher_generator = CypherGenerator::new();
+        let mut x = ExprGenVisitor {
+            random: RandomGenerator::new(),
+            expr_string: String::new(),
+            cypher: &mut cypher_generator,
+        };
+        let ans = x.visit_atom();
         println!("{}", ans);
     }
 }

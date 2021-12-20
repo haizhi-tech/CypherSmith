@@ -1,7 +1,6 @@
-use super::{
-    cypher::{ConvertVisitor, CypherNode},
-    expr::{Expression, NodeLabel, Variable},
-};
+use super::cypher::{ConvertVisitor, CypherNode};
+
+use crate::common::{Expression, NodeLabel};
 
 pub struct TransformVisitor {
     cypher_string: String,

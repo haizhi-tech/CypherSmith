@@ -1,3 +1,5 @@
+use super::RandomGenerator;
+
 // pub enum Variable {
 //     UnescapedSymbolicName,
 //     EscapedSymbolicName,
@@ -30,7 +32,7 @@ pub struct VariableGenerator {
 impl VariableGenerator {
     pub fn new() -> Self {
         VariableGenerator {
-            variable_name: "a".to_string(),
+            variable_name: "variable".to_string(),
             number: 0u32,
         }
         // Variable::
@@ -43,6 +45,56 @@ impl VariableGenerator {
     pub fn new_variable(&mut self) -> Variable {
         self.number += 1u32;
         Variable::new(self.variable_name.clone() + &self.number.to_string())
+    }
+
+    pub fn get_old_variable(&mut self) -> Variable {
+        Variable::new(self.variable_name.clone() + &self.number.to_string())
+    }
+
+    pub fn get_procedure_method(&mut self) -> Variable {
+        Variable::new("shortestPath".to_string())
+    }
+
+    pub fn get_procedure_result(&mut self) -> Variable {
+        Variable::new("procedure_result(WIP)".to_string())
+    }
+
+    pub fn get_symbolic_or_integer(&mut self) -> Variable {
+        Variable::new("symbolic_or_integer(WIP)".to_string())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Properties {
+    property_name: String,
+}
+
+impl Properties {
+    pub fn new() -> Self {
+        Properties {
+            property_name: "property(WIP)".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.property_name.clone()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct NameSpace {
+    name_space: String,
+}
+
+impl NameSpace {
+    pub fn new() -> Self {
+        NameSpace {
+            name_space: "atlas".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name_space.clone()
     }
 }
 
@@ -60,7 +112,25 @@ pub struct Expression {
 impl Expression {
     pub fn new() -> Self {
         Expression {
-            expression_name: "a".to_string(),
+            expression_name: "expression(WIP)".to_string(),
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.expression_name.clone()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct PropertyExpression {
+    expression_name: String,
+}
+
+// todo: need to implementation.
+impl PropertyExpression {
+    pub fn new() -> Self {
+        PropertyExpression {
+            expression_name: "a.age".to_string(),
         }
     }
 
@@ -74,11 +144,45 @@ pub struct NodeLabel {
     label_name: String,
 }
 
+// todo: need to implementation get old nodelabel.
 impl NodeLabel {
     pub fn new() -> Self {
+        // let label_name = if random.d12() < 6 { // Variable name
+
+        // } else { // label_name == ReserverdWord
+        //     let x = ReservedWord::Delete;
+        // };
         NodeLabel {
-            label_name: "Person".to_string(),
+            label_name: "NodeLabel(WIP)".to_string(),
         }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.label_name.clone()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct SchemaName {
+    label_name: String,
+}
+
+impl SchemaName {
+    // todo: need to modify, SchemaName not correct.
+    pub fn new(random: &mut RandomGenerator) -> Self {
+        let label_name = if random.d12() < 6 {
+            // Variable name
+            NodeLabel::new().get_name()
+        } else {
+            // label_name == ReserverdWord
+            let index = random.d42();
+            RESERVED_WORD[index as usize].to_string()
+        };
+        SchemaName { label_name }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.label_name.clone()
     }
 }
 
@@ -178,6 +282,18 @@ pub enum Literal {
     Null,
 }
 
+#[derive(Debug)]
+pub enum RelationshipDirection {
+    // <- [] -
+    Left,
+    // - [] ->
+    Right,
+    // <- [] ->
+    Both,
+    // - [] -
+    None,
+}
+
 pub const RESERVED_WORD: &'static [&'static str] = &[
     "All",
     "And",
@@ -227,69 +343,9 @@ pub const RESERVED_WORD: &'static [&'static str] = &[
     "Xor",
 ];
 
-// resverserd words number: 45
-// pub enum ReservedWord {
-//     All,
-//     And,
-//     As,
-//     Asc,
-//     Ascending,
-//     By,
-//     Case,
-//     Create,
-//     Delete,
-//     Desc,
-//     Descending,
-//     Detach,
-//     Distinct,
-//     Drop,
-//     Else,
-//     End,
-//     Ends,
-//     Exists,
-//     False,
-//     In,
-//     Is,
-//     Limit,
-//     Match,
-//     Merge,
-//     Not,
-//     Null,
-//     On,
-//     Optional,
-//     Or,
-//     Order,
-//     Remove,
-//     Return,
-//     Set,
-//     Skip,
-//     Starts,
-//     Then,
-//     To,
-//     True,
-//     Union,
-//     Unique,
-//     Unwind,
-//     When,
-//     Where,
-//     With,
-//     Xor,
-// }
-
-pub enum RelationshipDirection {
-    // <- [] -
-    Left,
-    // - [] ->
-    Right,
-    // <- [] ->
-    Both,
-    // - [] -
-    None,
-}
-
 #[cfg(test)]
 mod tests {
-    use super::VariableGenerator;
+    use super::{RandomGenerator, SchemaName, VariableGenerator};
 
     #[test]
     fn test_variable_generator() {
@@ -300,5 +356,12 @@ mod tests {
             println!("{:?}", new_var);
         }
         println!("{:?}", var);
+    }
+
+    #[test]
+    fn test_schema_name() {
+        let mut random_gen = RandomGenerator::new();
+        let new_schema_name = SchemaName::new(&mut random_gen);
+        println!("{:?}", new_schema_name);
     }
 }

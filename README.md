@@ -1,2 +1,2 @@
-# cypher-smith
-Rust Version of SQLsmith
+# Cypher-smith
+Random Cypher Generator of OpenCypher
