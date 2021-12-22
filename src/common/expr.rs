@@ -121,6 +121,12 @@ impl Expression {
     }
 }
 
+impl From<String> for Expression {
+    fn from(s: String) -> Self {
+        Expression { expression_name: s }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct PropertyExpression {
     expression_name: String,

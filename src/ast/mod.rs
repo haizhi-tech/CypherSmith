@@ -9,18 +9,27 @@ mod transform;
 pub use cypher::CypherNode;
 pub use cypher_gen::CypherGenerator;
 pub use expr::ExpressionNodeVisitor;
+pub use expr_gen::ExprGenerator;
 pub use transform::TransformVisitor;
 
 #[cfg(test)]
 mod tests {
 
-    use super::cypher_gen::CypherGenerator;
+    use super::{CypherGenerator, ExprGenerator};
 
     #[test]
-    fn query_test() {
+    fn cypher_generator_test() {
         let mut generator = CypherGenerator::new();
         generator.visit();
         println!("{}", generator.get_current_query_string());
+    }
+
+    #[test]
+    fn expression_generator_test() {
+        let mut cypher_generator = CypherGenerator::new();
+        let mut x = ExprGenerator::new(&mut cypher_generator);
+        let (ans, _) = x.visit();
+        println!("{}", ans);
     }
 
     #[test]

@@ -1,4 +1,7 @@
-use super::cypher::{CypherNode, CypherNodeVisitor};
+use super::{
+    cypher::{CypherNode, CypherNodeVisitor},
+    ExprGenerator,
+};
 use crate::common::{
     Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression, RandomGenerator,
     RelationshipDirection, SchemaName, VariableGenerator,
@@ -267,9 +270,12 @@ impl CypherNodeVisitor for CypherGenerator {
         with_string += &projection_body_string;
 
         let where_clause = if self.random.bool() {
-            let where_expression = Expression::new();
+            // let where_expression = Expression::new();
+            // with_string += &where_expression.get_name();
+            let mut expr_generator = ExprGenerator::new(self);
+            let (where_string, where_expression) = expr_generator.visit();
             with_string += " WHERE ";
-            with_string += &where_expression.get_name();
+            with_string += &where_string;
             Some(where_expression)
         } else {
             None
@@ -312,6 +318,8 @@ impl CypherNodeVisitor for CypherGenerator {
     fn visit_explicit_procedure_invocation(&mut self) -> Self::Output {
         let mut procedure_string = String::new();
         let name_space = NameSpace::new();
+        // let mut expr_generator = ExprGenerator::new(self);
+        // let (where_string, where_expression) = expr_generator.visit();
         let symbolic_name = self.variables.get_procedure_method();
         procedure_string += &name_space.get_name();
         procedure_string += ".";

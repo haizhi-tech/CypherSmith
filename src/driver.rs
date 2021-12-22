@@ -1,18 +1,21 @@
 use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
-use crate::common::RandomGenerator;
+use crate::meta::GraphSchema;
 
 #[derive(Default)]
 pub struct Driver {
-    random_generator: RandomGenerator,
     queries: u32,
+    //graph_schema: GraphSchema,
 }
 
 impl Driver {
     pub fn new() -> Driver {
         Driver {
-            random_generator: RandomGenerator::new(),
             queries: 0,
         }
+    }
+
+    pub fn new_schema() {
+
     }
 
     // ast tree construct
