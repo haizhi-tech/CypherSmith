@@ -6,9 +6,11 @@ use crate::common::{
     Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression, RandomGenerator,
     RelationshipDirection, SchemaName, VariableGenerator,
 };
+use crate::meta::GraphSchema;
 
 pub struct CypherGenerator {
-    query_string: String,
+    // query_string: String,
+    graph_schema: GraphSchema,
     random: RandomGenerator,
     variables: VariableGenerator,
 }
@@ -16,7 +18,16 @@ pub struct CypherGenerator {
 impl CypherGenerator {
     pub fn new() -> Self {
         CypherGenerator {
-            query_string: String::new(),
+            // query_string: String::new(),
+            graph_schema: GraphSchema::default(),
+            random: RandomGenerator::new(),
+            variables: VariableGenerator::new(),
+        }
+    }
+
+    pub fn new_schema(graph_schema: &GraphSchema) -> Self {
+        CypherGenerator {
+            graph_schema: graph_schema.clone(),
             random: RandomGenerator::new(),
             variables: VariableGenerator::new(),
         }
@@ -24,19 +35,20 @@ impl CypherGenerator {
 }
 
 impl CypherGenerator {
-    pub fn visit(&mut self) -> CypherNode {
-        let (cypher_node, query_string) = self.visit_query();
-        self.query_string = query_string;
-        cypher_node
+    pub fn visit(&mut self) -> (CypherNode, String) {
+        // let (cypher_node, query_string) = self.visit_query();
+        // self.query_string = query_string;
+        // cypher_node
+        self.visit_query()
     }
 
     pub fn visit_expression(&mut self) -> String {
         self.visit_property_or_labels_expression().1
     }
 
-    pub fn get_current_query_string(&mut self) -> String {
-        self.query_string.clone()
-    }
+    // pub fn get_current_query_string(&mut self) -> String {
+    //     self.query_string.clone()
+    // }
 }
 
 impl CypherNodeVisitor for CypherGenerator {
@@ -1392,8 +1404,10 @@ mod tests {
     #[test]
     fn query_test() {
         let mut generator = CypherGenerator::new();
-        generator.visit();
-        println!("{}", generator.query_string);
+        // generator.visit();
+        // println!("{}", generator.query_string);
+        let (_, cypher_string) = generator.visit();
+        println!("{}", cypher_string);
     }
 
     #[test]

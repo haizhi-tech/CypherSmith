@@ -1,8 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use super::Label;
-
-pub struct 
-
-GraphSchema {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphSchema {
     // graph name
     name: String,
     // node labels
@@ -12,7 +12,7 @@ GraphSchema {
 }
 
 impl GraphSchema {
-    fn new(name: String, labels: Vec<Label>) -> GraphSchema {
+    pub fn new(name: String, labels: Vec<Label>) -> GraphSchema {
         let mut vertex_labels = Vec::new();
         let mut edge_labels = Vec::new();
         for label in labels.iter() {
@@ -26,6 +26,16 @@ impl GraphSchema {
             name,
             vertex_labels,
             edge_labels,
+        }
+    }
+}
+
+impl Default for GraphSchema {
+    fn default() -> Self {
+        GraphSchema {
+            name: "test".to_string(),
+            vertex_labels: vec![],
+            edge_labels: vec![],
         }
     }
 }

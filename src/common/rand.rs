@@ -56,19 +56,11 @@ impl RandomGenerator {
     }
 
     pub fn bool(&mut self) -> bool {
-        if self.d2() > 0 {
-            false
-        } else {
-            true
-        }
+        self.d2() <= 0
     }
 
     pub fn low_prob_bool(&mut self) -> bool {
-        if self.d12() > 0 {
-            false
-        } else {
-            true
-        }
+        self.d12() <= 0
     }
 }
 

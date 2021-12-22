@@ -1,27 +1,30 @@
 use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
-use crate::meta::GraphSchema;
+use crate::meta::{GraphSchema};
 
 #[derive(Default)]
 pub struct Driver {
     queries: u32,
-    //graph_schema: GraphSchema,
+    graph_schema: GraphSchema,
 }
 
 impl Driver {
     pub fn new() -> Driver {
         Driver {
             queries: 0,
+            graph_schema: GraphSchema::default(),
         }
     }
 
-    pub fn new_schema() {
-
+    pub fn load_schema(&mut self, schema: GraphSchema) -> GraphSchema {
+        self.graph_schema = schema;
+        self.graph_schema.clone()
     }
 
     // ast tree construct
-    pub fn execute(&self) -> CypherNode {
+    pub fn execute(&self) -> (CypherNode, String) {
         // let transform = TransformVisitor::new();
-        let mut ast_generator = CypherGenerator::new();
+        // let mut ast_generator = CypherGenerator::new();
+        let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
         ast_generator.visit()
     }
 

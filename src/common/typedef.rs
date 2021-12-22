@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 pub type LabelId = u16;
 pub type PropertyId = u16;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DataType {
     Null = 0,
     Bool = 1,
@@ -14,7 +16,7 @@ pub enum DataType {
     String = 8,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Property {
     name: String,
     prop_id: PropertyId,

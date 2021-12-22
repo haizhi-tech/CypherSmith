@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 
 use crate::common::{LabelId, Property};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LabelKind {
     Vertex,
     Edge {
@@ -27,7 +28,7 @@ impl LabelKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Label {
     label_name: String,
     label_id: LabelId,

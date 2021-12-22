@@ -21,7 +21,7 @@ impl Log {
     }
 
     // use to get the statistics information.
-    pub fn execute(&self, cypher_ast: &CypherNode) {
+    pub fn execute(&self, _cypher_ast: &CypherNode) {
         todo!()
     }
 

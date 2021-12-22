@@ -20,8 +20,8 @@ mod tests {
     #[test]
     fn cypher_generator_test() {
         let mut generator = CypherGenerator::new();
-        generator.visit();
-        println!("{}", generator.get_current_query_string());
+        let (_, cypher_string) = generator.visit();
+        println!("{}", cypher_string);
     }
 
     #[test]
