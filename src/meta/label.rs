@@ -40,6 +40,16 @@ impl Label {
     pub fn is_vertex(&self) -> bool {
         self.kind.is_vertex()
     }
+
+    // return the label name
+    pub fn get_name(&self) -> String {
+        self.label_name.clone()
+    }
+
+    // return random property
+    pub fn random_property(&self) -> Property {
+        self.properties[0].clone()
+    }
 }
 
 #[cfg(test)]

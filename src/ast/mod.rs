@@ -38,4 +38,11 @@ mod tests {
         let expression_string = generator.visit_expression();
         println!("{}", expression_string);
     }
+
+    #[test]
+    fn match_clause_test() {
+        let mut generator = CypherGenerator::new();
+        let (_, expression_string) = generator.test_match_clause();
+        println!("{}", expression_string);
+    }
 }

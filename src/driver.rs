@@ -25,7 +25,8 @@ impl Driver {
         // let transform = TransformVisitor::new();
         // let mut ast_generator = CypherGenerator::new();
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
-        ast_generator.visit()
+        ast_generator.visit();
+        ast_generator.test_match_clause()
     }
 
     // ast tree transfrom to cypher string.

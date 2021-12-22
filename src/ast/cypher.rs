@@ -1,7 +1,8 @@
 use crate::common::{
     Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression,
-    RelationshipDirection, SchemaName, Variable,
+    RelationshipDirection, SchemaName, Variable, Property, FieldValue,
 };
+use crate::meta::Label;
 
 use paste::paste;
 
@@ -293,8 +294,8 @@ cypher_nodes_impl! {
     /// NodePattern: properties: Literal|Parameter
     NodePattern {
         var: Option<Variable>,
-        vertex_labels: Vec<NodeLabel>,
-        properties: Option<Properties>,
+        vertex_labels: Vec<Label>,
+        properties: Option<(Property, FieldValue)>,
     },
 
     /// RelationshipPattern: [variable :label|:label * 1..2 properties]
@@ -302,9 +303,9 @@ cypher_nodes_impl! {
     RelationshipPattern {
         direction: RelationshipDirection,
         var: Option<Variable>,
-        edge_labels: Vec<NodeLabel>,
+        edge_labels: Vec<Label>,
         range: (Option<i32>, Option<i32>),
-        properties: Option<Properties>,
+        properties: Option<(Property, FieldValue)>,
     },
 
     /// Expression relation.
