@@ -31,12 +31,12 @@ impl GraphSchema {
 }
 
 impl GraphSchema {
-    pub fn rand_vertex_labels(&self) -> Label{
+    pub fn rand_vertex_labels(&self) -> Label {
         // todo: add random select.
         self.vertex_labels[0].clone()
     }
 
-    pub fn rand_edge_labels(&self) -> Label{
+    pub fn rand_edge_labels(&self) -> Label {
         // todo: add random select.
         self.edge_labels[0].clone()
     }
@@ -55,7 +55,5 @@ impl Default for GraphSchema {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test() {
-
-    }
+    fn test() {}
 }

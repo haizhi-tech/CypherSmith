@@ -973,23 +973,22 @@ impl CypherNodeVisitor for CypherGenerator {
         // todo: in atlas graph, one vertex has only one vertex_label.
         let mut vertex_labels = vec![];
         // for _ in 0..self.random.d2() {
-            // let node_label = NodeLabel::new();
-            let node_label = self.graph_schema.rand_vertex_labels();
-            let node_property = node_label.random_property();
-            node_pattern_string += ":";
-            node_pattern_string += &node_label.get_name();
-            vertex_labels.push(node_label);
+        // let node_label = NodeLabel::new();
+        let node_label = self.graph_schema.rand_vertex_labels();
+        let node_property = node_label.random_property();
+        node_pattern_string += ":";
+        node_pattern_string += &node_label.get_name();
+        vertex_labels.push(node_label);
         // }
 
-
         // previous label's properties.
-        
+
         let properties = if self.random.bool() {
             // let properties = Properties::new();
             let property_value = node_property.default_value();
 
             // node_pattern_string += &properties.get_name();
-            
+
             // convert ast tree to string.
             node_pattern_string += "{";
             node_pattern_string += &node_property.get_name();
@@ -1002,8 +1001,6 @@ impl CypherNodeVisitor for CypherGenerator {
             None
         };
         node_pattern_string += ")";
-
-        
 
         (
             CypherNode::NodePattern {

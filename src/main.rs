@@ -1,11 +1,13 @@
-use cypher_smith::{Driver, Log, CliArgsConfig, GraphSchema};
+use cypher_smith::{CliArgsConfig, Driver, GraphSchema, Log};
 
 fn main() {
     // add connection and get the schema information.
     let config = <CliArgsConfig as clap::Parser>::parse();
 
     if config.schema.is_none() {
-        eprintln!("no args input, do nothing!\nuse `graph_importer --help` to find out example usage");
+        eprintln!(
+            "no args input, do nothing!\nuse `graph_importer --help` to find out example usage"
+        );
     }
 
     // get the label name and so on.
@@ -21,7 +23,7 @@ fn main() {
     // generator the ast tree and string.
     let (cypher_ast, cypher_string) = driver.execute();
     println!("{:?}", cypher_ast);
-    
+
     // query number add 1
     driver.add_query();
 

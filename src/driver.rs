@@ -1,5 +1,5 @@
 use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
-use crate::meta::{GraphSchema};
+use crate::meta::GraphSchema;
 
 #[derive(Default)]
 pub struct Driver {

@@ -1,6 +1,6 @@
 use crate::common::{
-    Expression, Literal, NameSpace, NodeLabel, Properties, PropertyExpression,
-    RelationshipDirection, SchemaName, Variable, Property, FieldValue,
+    Expression, FieldValue, Literal, NameSpace, NodeLabel, Properties, Property,
+    PropertyExpression, RelationshipDirection, SchemaName, Variable,
 };
 use crate::meta::Label;
 
