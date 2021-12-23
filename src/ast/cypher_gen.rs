@@ -885,7 +885,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         for _ in 0..self.random.d2() {
             let (pattern_part_node, pattern_part_string) = self.visit_pattern_part();
-            pattern_string += " , ";
+            pattern_string += ",";
             pattern_string += &pattern_part_string;
             pattern_parts.push(Box::new(pattern_part_node));
         }
@@ -899,7 +899,7 @@ impl CypherNodeVisitor for CypherGenerator {
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
             pattern_part_string += &variable.get_name();
-            pattern_part_string += " = ";
+            pattern_part_string += "=";
             Some(variable)
         } else {
             None
@@ -959,7 +959,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     // NodePattern: ( Variable? (:label)* Properties)
     fn visit_node_pattern(&mut self) -> Self::Output {
-        let mut node_pattern_string = "( ".to_string();
+        let mut node_pattern_string = "(".to_string();
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
@@ -974,8 +974,8 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut vertex_labels = vec![];
         // for _ in 0..self.random.d2() {
         // let node_label = NodeLabel::new();
-        let node_label = self.graph_schema.rand_vertex_labels();
-        let node_property = node_label.random_property();
+        let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
+        let node_property = node_label.random_property(&mut self.random);
         node_pattern_string += ":";
         node_pattern_string += &node_label.get_name();
         vertex_labels.push(node_label);
@@ -1036,14 +1036,14 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut edge_labels = vec![];
         if self.random.bool() {
             // let relation_label = NodeLabel::new();
-            let relation_label = self.graph_schema.rand_edge_labels();
+            let relation_label = self.graph_schema.rand_edge_label(&mut self.random);
             relationship_pattern_string += ":";
             relationship_pattern_string += &relation_label.get_name();
             edge_labels.push(relation_label);
 
             for _ in 0..self.random.d2() {
                 // let relation_label = NodeLabel::new();
-                let relation_label = self.graph_schema.rand_edge_labels();
+                let relation_label = self.graph_schema.rand_edge_label(&mut self.random);
                 relationship_pattern_string += "|:";
                 relationship_pattern_string += &relation_label.get_name();
                 edge_labels.push(relation_label);
@@ -1069,12 +1069,9 @@ impl CypherNodeVisitor for CypherGenerator {
             (None, None)
         };
 
-        let properties = if self.random.bool() {
-            // let properties = Properties::new();
-            // relationship_pattern_string += " ";
-            // relationship_pattern_string += &properties.get_name();
-            // Some(properties)
-            let edge_property = edge_labels[0].clone().random_property();
+        // todo: property logical.
+        let properties = if self.random.bool() && !edge_labels.is_empty() {
+            let edge_property = edge_labels[0].clone().random_property(&mut self.random);
             let property_value = edge_property.default_value();
             relationship_pattern_string += "{";
             relationship_pattern_string += &edge_property.get_name();

@@ -36,13 +36,13 @@ impl FieldValue {
         match d_type {
             DataType::Null => Self::Null,
             DataType::Bool => Self::Boolean(false),
-            DataType::Int32 => Self::Int32(0),
-            DataType::Int64 => Self::Int64(0),
-            DataType::Float => Self::Float(0.0),
-            DataType::Double => Self::Double(0.0),
+            DataType::Int32 => Self::Int32(1),
+            DataType::Int64 => Self::Int64(1),
+            DataType::Float => Self::Float(1.0),
+            DataType::Double => Self::Double(1.0),
             DataType::Date => Self::Date(0),
             DataType::Datetime => Self::Datetime(0),
-            DataType::String => Self::String("".to_string()),
+            DataType::String => Self::String("Alice(deault)".to_string()),
         }
     }
 }
@@ -81,15 +81,15 @@ impl Display for FieldValue {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Property {
-    name: String,
-    prop_id: PropertyId,
-    prop_type: DataType,
-    is_pk: bool,
-    nullable: bool,
-    is_delete: bool,
-    is_vertex: bool,
-    is_index: bool,
-    is_unique: bool,
+    pub name: String,
+    pub prop_id: PropertyId,
+    pub prop_type: DataType,
+    pub is_pk: bool,
+    pub nullable: bool,
+    pub is_delete: bool,
+    // is_vertex: bool,
+    // is_index: bool,
+    // is_unique: bool,
 }
 
 impl Property {

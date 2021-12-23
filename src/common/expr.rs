@@ -32,7 +32,7 @@ pub struct VariableGenerator {
 impl VariableGenerator {
     pub fn new() -> Self {
         VariableGenerator {
-            variable_name: "variable".to_string(),
+            variable_name: "v".to_string(),
             number: 0u32,
         }
         // Variable::
@@ -61,23 +61,6 @@ impl VariableGenerator {
 
     pub fn get_symbolic_or_integer(&mut self) -> Variable {
         Variable::new("symbolic_or_integer(WIP)".to_string())
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Properties {
-    property_name: String,
-}
-
-impl Properties {
-    pub fn new() -> Self {
-        Properties {
-            property_name: "property(WIP)".to_string(),
-        }
-    }
-
-    pub fn get_name(&self) -> String {
-        self.property_name.clone()
     }
 }
 
@@ -181,7 +164,7 @@ impl SchemaName {
             NodeLabel::new().get_name()
         } else {
             // label_name == ReserverdWord
-            let index = random.d42();
+            let index = random.under(48);
             RESERVED_WORD[index as usize].to_string()
         };
         SchemaName { label_name }

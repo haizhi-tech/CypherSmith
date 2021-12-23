@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::{LabelId, Property};
+use crate::common::{LabelId, Property, RandomGenerator};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LabelKind {
@@ -30,10 +30,10 @@ impl LabelKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Label {
-    label_name: String,
-    label_id: LabelId,
-    kind: LabelKind,
-    properties: Vec<Property>,
+    pub label_name: String,
+    pub label_id: LabelId,
+    pub kind: LabelKind,
+    pub properties: Vec<Property>,
 }
 
 impl Label {
@@ -46,9 +46,29 @@ impl Label {
         self.label_name.clone()
     }
 
-    // return random property
-    pub fn random_property(&self) -> Property {
-        self.properties[0].clone()
+    /// get random property
+    pub fn random_property(&self, random: &mut RandomGenerator) -> Property {
+        let idx = random.under(self.properties.len() as _);
+        self.properties[idx as usize].clone()
+    }
+
+    /// get random properties without repeat.
+    pub fn random_properties(&self, number: i32, random: &mut RandomGenerator) -> Vec<Property> {
+        if number <= 0 {
+            return vec![];
+        }
+        if number as usize > self.properties.len() {
+            return self.properties.clone();
+        }
+        let length = self.properties.len() as i32;
+
+        (0..number)
+            .into_iter()
+            .map(|_| {
+                let idx = random.under(length);
+                self.properties[idx as usize].clone()
+            })
+            .collect::<Vec<Property>>()
     }
 }
 

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::Label;
+use crate::common::RandomGenerator;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphSchema {
     // graph name
@@ -31,14 +33,18 @@ impl GraphSchema {
 }
 
 impl GraphSchema {
-    pub fn rand_vertex_labels(&self) -> Label {
-        // todo: add random select.
-        self.vertex_labels[0].clone()
+    // todo: add error handling.
+    pub fn rand_vertex_label(&self, random: &mut RandomGenerator) -> Label {
+        let length = self.vertex_labels.len();
+        // todo: return error.
+        if length == 0 {}
+        let idx = random.under(length as _);
+        self.vertex_labels[idx as usize].clone()
     }
 
-    pub fn rand_edge_labels(&self) -> Label {
-        // todo: add random select.
-        self.edge_labels[0].clone()
+    pub fn rand_edge_label(&self, random: &mut RandomGenerator) -> Label {
+        let idx = random.under(self.edge_labels.len() as _);
+        self.edge_labels[idx as usize].clone()
     }
 }
 

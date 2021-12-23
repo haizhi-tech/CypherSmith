@@ -1,6 +1,6 @@
 use crate::common::{
-    Expression, FieldValue, Literal, NameSpace, NodeLabel, Properties, Property,
-    PropertyExpression, RelationshipDirection, SchemaName, Variable,
+    Expression, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
+    RelationshipDirection, SchemaName, Variable,
 };
 use crate::meta::Label;
 
@@ -299,7 +299,6 @@ cypher_nodes_impl! {
     },
 
     /// RelationshipPattern: [variable :label|:label * 1..2 properties]
-    /// todo: need to modify: nodelabel -> edgelabel.
     RelationshipPattern {
         direction: RelationshipDirection,
         var: Option<Variable>,

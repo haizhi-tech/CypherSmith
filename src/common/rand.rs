@@ -1,6 +1,5 @@
 use rand::{distributions::Uniform, rngs::ThreadRng, thread_rng, Rng};
 
-// todo: need to modify, generator integet from 1 not 0.
 #[derive(Clone)]
 pub struct RandomGenerator {
     rng: ThreadRng,
@@ -9,7 +8,6 @@ pub struct RandomGenerator {
     uniform_d9: Uniform<i32>,
     uniform_d12: Uniform<i32>,
     uniform_d20: Uniform<i32>,
-    uniform_d42: Uniform<i32>,
     uniform_d100: Uniform<i32>,
 }
 
@@ -22,7 +20,6 @@ impl RandomGenerator {
             uniform_d9: Uniform::new(0, 9),
             uniform_d12: Uniform::new(0, 12),
             uniform_d20: Uniform::new(0, 20),
-            uniform_d42: Uniform::new(0, 42),
             uniform_d100: Uniform::new(0, 100),
         }
     }
@@ -47,20 +44,37 @@ impl RandomGenerator {
         self.rng.sample(self.uniform_d20)
     }
 
-    pub fn d42(&mut self) -> i32 {
-        self.rng.sample(self.uniform_d42)
-    }
-
     pub fn d100(&mut self) -> i32 {
         self.rng.sample(self.uniform_d100)
     }
 
+    /// generate i32 in range [0, number).
+    pub fn under(&mut self, number: i32) -> i32 {
+        if number <= 0 {
+            return 0;
+        }
+        let uniform = Uniform::new(0, number);
+        self.rng.sample(uniform)
+    }
+
+    /// generate i32 in range [lo, hi).
+    pub fn range(&mut self, lo: i32, hi: i32) -> i32 {
+        if lo == hi {
+            return lo;
+        }
+        if lo > hi {
+            self.rng.sample(Uniform::new(hi, lo))
+        } else {
+            self.rng.sample(Uniform::new(lo, hi))
+        }
+    }
+
     pub fn bool(&mut self) -> bool {
-        self.d2() <= 0
+        self.d2() < 1
     }
 
     pub fn low_prob_bool(&mut self) -> bool {
-        self.d12() <= 0
+        self.d12() < 1
     }
 }
 
@@ -90,9 +104,6 @@ mod test {
         }
         for i in 0..10 {
             eprintln!("random number {}: {}", i, gen_random.d20());
-        }
-        for i in 0..10 {
-            eprintln!("random number {}: {}", i, gen_random.d42());
         }
         for i in 0..10 {
             eprintln!("random number {}: {}", i, gen_random.d100());
