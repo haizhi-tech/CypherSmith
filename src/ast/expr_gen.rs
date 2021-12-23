@@ -46,15 +46,15 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
     fn visit_or_expression(&mut self) -> Self::Output {
         let mut ret = String::new();
         ret += &self.visit_xor_expression();
-        
-        if (self.random.d6() == 1) && (self.complexity < self.limit)  {
+
+        if (self.random.d6() == 1) && (self.complexity < self.limit) {
             ret += " OR ";
             ret += &self.visit_xor_expression();
         }
 
         // let nmber = self.random.d2();
         // for _ in 0..number {
-            
+
         // }
         ret
     }
@@ -220,7 +220,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         //         _ => {}
         //     }
         // }
-        
+
         if (self.random.d2() == 1) && (self.complexity < self.limit) {
             match self.random.d12() {
                 0 => {
@@ -262,7 +262,8 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         if self.random.d6() == 1 {
             ret += ".";
             ret += "SchemaName(WIP)";
-        } else if self.random.d6() == 1 { // NodelabelName
+        } else if self.random.d6() == 1 {
+            // NodelabelName
             let node_label = self.cypher.graph_schema.rand_vertex_label(&mut self.random);
             // let node_label = NodeLabel::new();
             ret += &node_label.get_name();
@@ -323,7 +324,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 _ => {}
             }
         }
-        
+
         ret += &self.visit_property_or_labels_expression();
         ret
     }
