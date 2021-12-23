@@ -1,0 +1,89 @@
+{
+    "name": "cyphersmith",
+    "vertex_labels": [
+        {
+            "label_name": "Person",
+            "label_id": 0,
+            "kind": "Vertex",
+            "properties": [
+                {
+                    "name": "id",
+                    "prop_id": 0,
+                    "prop_type": "Int32",
+                    "is_pk": true,
+                    "nullable": false,
+                    "is_delete": false
+                },
+                {
+                    "name": "name",
+                    "prop_id": 1,
+                    "prop_type": "String",
+                    "is_pk": false,
+                    "nullable": true,
+                    "is_delete": false
+                }
+            ]
+        },
+        {
+            "label_name": "Company",
+            "label_id": 1,
+            "kind": "Vertex",
+            "properties": [
+                {
+                    "name": "id",
+                    "prop_id": 0,
+                    "prop_type": "Int32",
+                    "is_pk": true,
+                    "nullable": false,
+                    "is_delete": false
+                },
+                {
+                    "name": "company_name",
+                    "prop_id": 1,
+                    "prop_type": "String",
+                    "is_pk": false,
+                    "nullable": true,
+                    "is_delete": false
+                }
+            ]
+        }
+    ],
+    "edges": {
+        "teammate": {
+            "src_label_name": "player",
+            "dst_label_name": "player",
+            "properties": [
+                {
+                    "name": "start_year",
+                    "type": "int64"
+                },
+                {
+                    "name": "end_year",
+                    "type": "int64"
+                }
+            ]
+        }
+    },
+    "edge_labels": [
+        {
+            "label_name": "Knows",
+            "label_id": 3, 
+            "kind": { 
+                "Edge": {
+                    "relations": [[1,1]],
+                    "is_directed": true
+                }
+            },
+            "properties":[
+                {
+                    "name": "edge_id",
+                    "prop_id": 0,
+                    "prop_type": "Int32",
+                    "is_pk": true,
+                    "nullable": false,
+                    "is_delete": false
+                }
+            ]
+        }
+    ]
+}

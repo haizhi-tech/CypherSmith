@@ -9,11 +9,11 @@ use std::path::PathBuf;
     after_help = r#"# Examples
 
 ## import schema
-$ graph_importer --schema schema.json
+$ cypher-smith --schema schema.json
 
 "#
 )]
-pub struct CliArgsConfig {
+pub struct ArgsConfig {
     // #[clap(
     //     short,
     //     long,
@@ -32,7 +32,7 @@ pub struct CliArgsConfig {
     pub schema: Option<PathBuf>,
 }
 
-impl Default for CliArgsConfig {
+impl Default for ArgsConfig {
     fn default() -> Self {
         Self::parse_from::<&[&'static str], &&'static str>(&[])
     }

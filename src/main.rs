@@ -1,9 +1,8 @@
-use cypher_smith::{CliArgsConfig, Driver, GraphSchema, Log};
+use cypher_smith::{ArgsConfig, Driver, GraphSchema, Log};
 
 fn main() {
-    // add connection and get the schema information.
-    let config = <CliArgsConfig as clap::Parser>::parse();
-
+    // get user config.
+    let config = <ArgsConfig as clap::Parser>::parse();
     if config.schema.is_none() {
         eprintln!(
             "no args input, do nothing!\nuse `graph_importer --help` to find out example usage"
@@ -17,12 +16,14 @@ fn main() {
         let schema_path = schema_path.clone();
         let json = std::fs::read_to_string(schema_path).unwrap();
         let schema = serde_json::from_str::<GraphSchema>(&json).unwrap();
+        println!("Input schema information: \n{:?}", schema);
         driver.load_schema(schema);
     }
 
     // generator the ast tree and string.
     let (cypher_ast, cypher_string) = driver.execute();
-    println!("{:?}", cypher_ast);
+    println!("CypherAST:\n{:?}", cypher_ast);
+    println!("CypherString:\n{:?}", cypher_string);
 
     // query number add 1
     driver.add_query();
@@ -32,5 +33,4 @@ fn main() {
     logger.execute(&cypher_ast);
 
     logger.report();
-    println!("{}", cypher_string);
 }

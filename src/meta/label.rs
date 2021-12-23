@@ -74,6 +74,63 @@ impl Label {
 
 #[cfg(test)]
 mod tests {
+    use super::{Label, LabelKind};
+    use crate::common::{DataType, Property};
+
     #[test]
-    fn test() {}
+    fn test_vertex_label_deserialize() {
+        // node label: Person {id: i64, name: String}
+        let vertex_properties = vec![
+            Property {
+                name: "id".to_string(),
+                prop_id: 0,
+                prop_type: DataType::Int32,
+                is_pk: true,
+                nullable: false,
+                is_delete: false,
+            },
+            Property {
+                name: "name".to_string(),
+                prop_id: 1,
+                prop_type: DataType::String,
+                is_pk: false,
+                nullable: true,
+                is_delete: false,
+            },
+        ];
+
+        let vertex_label = Label {
+            label_name: "Person".to_string(),
+            label_id: 1,
+            kind: LabelKind::Vertex,
+            properties: vertex_properties,
+        };
+
+        let str = serde_json::to_string(&vertex_label).unwrap();
+        println!("{}", str);
+    }
+
+    #[test]
+    fn test_edge_label_deserialize() {
+        let edges_properties = vec![Property {
+            name: "edge_id".to_string(),
+            prop_id: 0,
+            prop_type: DataType::Int32,
+            is_pk: true,
+            nullable: false,
+            is_delete: false,
+        }];
+        let edge_label = Label {
+            label_name: "Knows".to_string(),
+            label_id: 3,
+            kind: LabelKind::Edge {
+                relations: vec![(1, 1)],
+                is_directed: true,
+            },
+            properties: edges_properties,
+        };
+
+        let str = serde_json::to_string(&edge_label).unwrap();
+        println!("{}", str);
+    }
 }
