@@ -81,12 +81,6 @@ impl NameSpace {
     }
 }
 
-pub struct SymbolicName {}
-
-pub struct IntegerLiteral {}
-
-pub struct Paramter {}
-
 #[derive(Debug, Default)]
 pub struct Expression {
     expression_name: String,

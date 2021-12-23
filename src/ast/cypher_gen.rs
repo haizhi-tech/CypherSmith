@@ -10,7 +10,7 @@ use crate::meta::GraphSchema;
 
 pub struct CypherGenerator {
     // query_string: String,
-    graph_schema: GraphSchema,
+    pub graph_schema: GraphSchema,
     random: RandomGenerator,
     variables: VariableGenerator,
 }
@@ -43,7 +43,7 @@ impl CypherGenerator {
     }
 
     pub fn visit_expression(&mut self) -> String {
-        self.visit_property_or_labels_expression().1
+        self.visit_atom().1
     }
 
     // pub fn get_current_query_string(&mut self) -> String {
@@ -453,6 +453,7 @@ impl CypherNodeVisitor for CypherGenerator {
         )
     }
 
+    /// Match Clause: Optional MATCH **pattern** [WHERE clause]
     fn visit_match(&mut self) -> Self::Output {
         let mut match_string = String::new();
 
@@ -468,10 +469,21 @@ impl CypherNodeVisitor for CypherGenerator {
         let pattern = Box::new(pattern_node);
         match_string += &pattern_string;
 
+        // let where_clause = if self.random.bool() {
+        //     let where_expression = Expression::new();
+        //     match_string += " WHERE ";
+        //     match_string += &where_expression.get_name();
+        //     Some(where_expression)
+        // } else {
+        //     None
+        // };
+
+        // generator where expression.
         let where_clause = if self.random.bool() {
-            let where_expression = Expression::new();
+            let mut expr_generator = ExprGenerator::new(self);
+            let (where_string, where_expression) = expr_generator.visit();
             match_string += " WHERE ";
-            match_string += &where_expression.get_name();
+            match_string += &where_string;
             Some(where_expression)
         } else {
             None
@@ -1100,36 +1112,37 @@ impl CypherNodeVisitor for CypherGenerator {
 
     // PropertyOrLabelsExpression: use to generate exprssion
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
-        let mut expression_string = String::new();
-        // atom: Literal
-        let (atom_node, atom_string) = self.visit_atom();
-        expression_string += &atom_string;
+        // let mut expression_string = String::new();
+        // // atom: Literal
+        // let (atom_node, atom_string) = self.visit_atom();
+        // expression_string += &atom_string;
 
-        let mut property_lookups = vec![];
-        // PropertyLookUp*
-        for _ in 0..self.random.d2() {
-            expression_string += " .";
-            let property_lookup = SchemaName::new(&mut self.random);
-            expression_string += &property_lookup.get_name();
-            property_lookups.push(property_lookup);
-        }
+        // let mut property_lookups = vec![];
+        // // PropertyLookUp*
+        // for _ in 0..self.random.d2() {
+        //     expression_string += " .";
+        //     let property_lookup = SchemaName::new(&mut self.random);
+        //     expression_string += &property_lookup.get_name();
+        //     property_lookups.push(property_lookup);
+        // }
 
-        let mut node_labels = vec![];
-        for _ in 0..self.random.d2() {
-            let node_label = NodeLabel::new();
-            expression_string += " :";
-            expression_string += &node_label.get_name();
-            node_labels.push(node_label);
-        }
+        // let mut node_labels = vec![];
+        // for _ in 0..self.random.d2() {
+        //     let node_label = NodeLabel::new();
+        //     expression_string += " :";
+        //     expression_string += &node_label.get_name();
+        //     node_labels.push(node_label);
+        // }
 
-        (
-            CypherNode::PropertyOrLabelsExpression {
-                atom: Box::new(atom_node),
-                property_lookups,
-                node_labels,
-            },
-            expression_string,
-        )
+        // (
+        //     CypherNode::PropertyOrLabelsExpression {
+        //         atom: Box::new(atom_node),
+        //         property_lookups,
+        //         node_labels,
+        //     },
+        //     expression_string,
+        // )
+        todo!()
     }
 
     fn visit_atom(&mut self) -> Self::Output {
@@ -1199,6 +1212,7 @@ impl CypherNodeVisitor for CypherGenerator {
                     atom_string += &expression.get_name();
                     expressions.push(expression)
                 }
+                atom_string += "]";
 
                 (None, expressions, Some(Box::new(filter_node)), None)
             }
