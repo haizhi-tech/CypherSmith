@@ -48,22 +48,6 @@
             ]
         }
     ],
-    "edges": {
-        "teammate": {
-            "src_label_name": "player",
-            "dst_label_name": "player",
-            "properties": [
-                {
-                    "name": "start_year",
-                    "type": "int64"
-                },
-                {
-                    "name": "end_year",
-                    "type": "int64"
-                }
-            ]
-        }
-    },
     "edge_labels": [
         {
             "label_name": "Knows",
