@@ -2,11 +2,10 @@ mod cypher;
 mod cypher_gen;
 mod expr;
 mod expr_gen;
-mod prod;
 mod transform;
 
 // pub use expr::{Variable};
-pub use cypher::CypherNode;
+pub use cypher::{CypherNode, LogVisitor};
 pub use cypher_gen::CypherGenerator;
 pub use expr::ExpressionNodeVisitor;
 pub use expr_gen::ExprGenerator;

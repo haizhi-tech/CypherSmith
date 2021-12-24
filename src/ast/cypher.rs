@@ -58,11 +58,32 @@ macro_rules! cypher_nodes_impl {
             //     }
             // }
 
+            /// The visitor trait for `CypherNode`.
+            ///
+            /// You should implementation api functions for every variant.
+            /// If you are only interested in some subset of variants, just use the `match` statement.
             pub trait ConvertVisitor {
                 type Output;
 
                 $(
                     fn [<visit_ $name:snake>](&mut self $(, $param: $type)* ) -> Self::Output;
+                )*
+
+                fn visit(&mut self, node: impl Into<CypherNode>) -> Self::Output {
+                    let node: CypherNode = node.into();
+                    match node {
+                        $(
+                            CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
+                        )*
+                    }
+                }
+            }
+
+            pub trait LogVisitor {
+                type Output;
+
+                $(
+                    fn [<visit_ $name:snake>](&mut self $(, $param: $type)* )  -> Self::Output;
                 )*
 
                 fn visit(&mut self, node: impl Into<CypherNode>) -> Self::Output {
@@ -353,6 +374,13 @@ impl From<Box<CypherNode>> for CypherNode {
         *x
     }
 }
+
+// impl From<&CypherNode> for CypherNode {
+//     fn from(x: &CypherNode) -> Self {
+//         // NOTE: deref-move syntax only works for Box<T>
+//         *x
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

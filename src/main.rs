@@ -4,9 +4,7 @@ fn main() {
     // get user config.
     let config = <ArgsConfig as clap::Parser>::parse();
     if config.schema.is_none() {
-        eprintln!(
-            "no args input, do nothing!\nuse `graph_importer --help` to find out example usage"
-        );
+        eprintln!("No args input!\nuse `cypher_smith --help` to find out example usage");
     }
 
     // get the label name and so on.
@@ -29,8 +27,8 @@ fn main() {
     driver.add_query();
 
     // logger recording intermediate information
-    let logger = Log::new();
-    logger.execute(&cypher_ast);
+    let mut logger = Log::new();
+    logger.execute(Box::new(cypher_ast));
 
     logger.report();
 }
