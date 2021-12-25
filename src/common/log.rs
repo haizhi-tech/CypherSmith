@@ -36,7 +36,10 @@ impl Log {
 
     // report current cyphersmith condition.
     pub fn report(&self) {
-        println!("AST tree information:\n SUM_NODES: {},\n height: {}", self.sum_nodes, self.sum_height);
+        println!(
+            "AST tree information:\n SUM_NODES: {},\n height: {}",
+            self.sum_nodes, self.sum_height
+        );
     }
 
     fn get_info(
