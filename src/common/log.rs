@@ -36,7 +36,7 @@ impl Log {
 
     // report current cyphersmith condition.
     pub fn report(&self) {
-        todo!()
+        println!("AST tree information:\n SUM_NODES: {},\n height: {}", self.sum_nodes, self.sum_height);
     }
 
     fn get_info(
@@ -299,7 +299,7 @@ impl LogVisitor for Log {
         range: (Option<i32>, Option<i32>),
         properties: Option<(Property, FieldValue)>,
     ) -> Self::Output {
-        todo!()
+        (1, 1)
     }
 
     fn visit_property_or_labels_expression(

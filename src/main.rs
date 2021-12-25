@@ -4,7 +4,8 @@ fn main() {
     // get user config.
     let config = <ArgsConfig as clap::Parser>::parse();
     if config.schema.is_none() {
-        eprintln!("No args input!\nuse `cypher_smith --help` to find out example usage");
+        eprintln!("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage");
+        return;
     }
 
     // get the label name and so on.

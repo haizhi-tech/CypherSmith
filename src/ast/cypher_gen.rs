@@ -1036,7 +1036,7 @@ impl CypherNodeVisitor for CypherGenerator {
             _ => RelationshipDirection::None,
         };
 
-        relationship_pattern_string += "<-[";
+        relationship_pattern_string += "-[";
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
