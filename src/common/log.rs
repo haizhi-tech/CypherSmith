@@ -1,5 +1,9 @@
-use std::error::Error;
+use std::{cmp, error::Error};
 
+use super::{
+    Expression, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
+    RelationshipDirection, SchemaName, Variable,
+};
 use crate::ast::{CypherNode, LogVisitor};
 
 #[derive(Default)]
@@ -34,6 +38,19 @@ impl Log {
     pub fn report(&self) {
         todo!()
     }
+
+    fn get_info(
+        &mut self,
+        cypher_nodes: Vec<Box<CypherNode>>,
+        sum_nodes: &mut u32,
+        max_level: &mut u32,
+    ) {
+        for node in cypher_nodes {
+            let (nodes, height) = self.visit(node);
+            *sum_nodes += nodes;
+            *max_level = cmp::max(height, *max_level)
+        }
+    }
 }
 
 impl LogVisitor for Log {
@@ -50,11 +67,10 @@ impl LogVisitor for Log {
         single_query: Box<CypherNode>,
         union_all: Vec<Box<CypherNode>>,
     ) -> Self::Output {
-        // let (single_query_nodes, single_query_height) = self.visit(single_query);
-        // let x = union_all.iter().map(|x| {
-            
-        // })
-        todo!()
+        let (mut regular_nodes, mut regular_height) = self.visit(single_query);
+        self.get_info(union_all, &mut regular_nodes, &mut regular_height);
+
+        (regular_nodes + 1, regular_height + 1)
     }
 
     fn visit_standalone_call(
@@ -66,7 +82,7 @@ impl LogVisitor for Log {
     }
 
     fn visit_single_query(&mut self, part_query: Box<CypherNode>) -> Self::Output {
-        todo!()
+        self.visit(part_query)
     }
 
     fn visit_single_part_query(
@@ -75,7 +91,26 @@ impl LogVisitor for Log {
         updating_clauses: Vec<Box<CypherNode>>,
         return_clause: Option<Box<CypherNode>>,
     ) -> Self::Output {
-        todo!()
+        let (mut single_part_nodes, mut single_part_height) = (0, 0);
+
+        self.get_info(
+            reading_clauses,
+            &mut single_part_nodes,
+            &mut single_part_height,
+        );
+        self.get_info(
+            updating_clauses,
+            &mut single_part_nodes,
+            &mut single_part_height,
+        );
+
+        if let Some(return_clause) = return_clause {
+            let (nodes, height) = self.visit(return_clause);
+            single_part_nodes += nodes;
+            single_part_height = cmp::max(height, single_part_height);
+        }
+
+        (single_part_nodes + 1, single_part_height + 1)
     }
 
     fn visit_multi_part_query(
@@ -89,7 +124,7 @@ impl LogVisitor for Log {
     fn visit_with(
         &mut self,
         projection_body: Box<CypherNode>,
-        where_clause: Option<super::Expression>,
+        where_clause: Option<Expression>,
     ) -> Self::Output {
         todo!()
     }
@@ -103,7 +138,7 @@ impl LogVisitor for Log {
     }
 
     fn visit_updating_clause(&mut self, updating_clause: Box<CypherNode>) -> Self::Output {
-        todo!()
+        self.visit(updating_clause)
     }
 
     fn visit_return(&mut self, projection_body: Box<CypherNode>) -> Self::Output {
@@ -115,8 +150,8 @@ impl LogVisitor for Log {
         is_distinct: bool,
         projection_items: Box<CypherNode>,
         order: Option<Box<CypherNode>>,
-        skip: Option<super::Expression>,
-        limit: Option<super::Expression>,
+        skip: Option<Expression>,
+        limit: Option<Expression>,
     ) -> Self::Output {
         todo!()
     }
@@ -124,32 +159,26 @@ impl LogVisitor for Log {
     fn visit_projection_items(
         &mut self,
         is_all: bool,
-        expressions: Vec<(super::Expression, Option<super::Variable>)>,
+        expressions: Vec<(Expression, Option<Variable>)>,
     ) -> Self::Output {
         todo!()
     }
 
-    fn visit_order(
-        &mut self,
-        sort_items: Vec<(super::Expression, Option<String>)>,
-    ) -> Self::Output {
+    fn visit_order(&mut self, sort_items: Vec<(Expression, Option<String>)>) -> Self::Output {
         todo!()
     }
 
     fn visit_match(
         &mut self,
-        is_optional: bool,
+        _is_optional: bool,
         pattern: Box<CypherNode>,
-        where_clause: Option<super::Expression>,
+        where_clause: Option<Expression>,
     ) -> Self::Output {
-        todo!()
+        let (pattern_nodes, pattern_height) = self.visit(pattern);
+        (pattern_nodes + 1, pattern_height + 1)
     }
 
-    fn visit_unwind(
-        &mut self,
-        expression: super::Expression,
-        variable: super::Variable,
-    ) -> Self::Output {
+    fn visit_unwind(&mut self, expression: Expression, variable: Variable) -> Self::Output {
         todo!()
     }
 
@@ -173,91 +202,102 @@ impl LogVisitor for Log {
         todo!()
     }
 
-    fn visit_delete(
-        &mut self,
-        is_detach: bool,
-        expressions: Vec<super::Expression>,
-    ) -> Self::Output {
+    fn visit_delete(&mut self, is_detach: bool, expressions: Vec<Expression>) -> Self::Output {
         todo!()
     }
 
     fn visit_set(
         &mut self,
-        property_set: Vec<(super::PropertyExpression, super::Expression)>,
-        variable_set: Vec<(super::Variable, super::Expression)>,
-        variable_add: Vec<(super::Variable, super::Expression)>,
-        label_set: Vec<(super::Variable, Vec<super::NodeLabel>)>,
+        property_set: Vec<(PropertyExpression, Expression)>,
+        variable_set: Vec<(Variable, Expression)>,
+        variable_add: Vec<(Variable, Expression)>,
+        label_set: Vec<(Variable, Vec<NodeLabel>)>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_explicit_procedure_invocation(
         &mut self,
-        procedure_name: (super::NameSpace, super::Variable),
-        expressions: Vec<super::Expression>,
+        procedure_name: (NameSpace, Variable),
+        expressions: Vec<Expression>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_implicit_procedure_invocation(
         &mut self,
-        procedure_name: (super::NameSpace, super::Variable),
+        procedure_name: (NameSpace, Variable),
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_yield_items(
         &mut self,
-        yield_items: Vec<(Option<super::Variable>, super::Variable)>,
-        where_clause: Option<super::Expression>,
+        yield_items: Vec<(Option<Variable>, Variable)>,
+        where_clause: Option<Expression>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_remove(
         &mut self,
-        variable_remove: Vec<(super::Variable, Vec<super::NodeLabel>)>,
-        property_remove: Vec<super::PropertyExpression>,
+        variable_remove: Vec<(Variable, Vec<NodeLabel>)>,
+        property_remove: Vec<PropertyExpression>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_pattern(&mut self, pattern_parts: Vec<Box<CypherNode>>) -> Self::Output {
-        todo!()
+        let (mut pattern_parts_nodes, mut pattern_parts_height) = (0, 0);
+        self.get_info(
+            pattern_parts,
+            &mut pattern_parts_nodes,
+            &mut pattern_parts_height,
+        );
+        (pattern_parts_nodes, pattern_parts_height)
     }
 
     fn visit_pattern_part(
         &mut self,
-        var: Option<super::Variable>,
+        _var: Option<Variable>,
         pattern_element: Box<CypherNode>,
     ) -> Self::Output {
-        todo!()
+        self.visit(pattern_element)
     }
 
     fn visit_pattern_element(
         &mut self,
-        parentheses: i32,
+        _parentheses: i32,
         pattern_element: (Box<CypherNode>, Vec<(Box<CypherNode>, Box<CypherNode>)>),
     ) -> Self::Output {
-        todo!()
+        let (mut nodes, mut height) = self.visit(pattern_element.0);
+        for (first, second) in pattern_element.1 {
+            let (nodes_first, height_first) = self.visit(first);
+            let (nodes_second, height_second) = self.visit(second);
+            nodes += nodes_first;
+            nodes += nodes_second;
+            height = cmp::max(height, height_first);
+            height = cmp::max(height, height_second);
+        }
+        (nodes, height)
     }
 
     fn visit_node_pattern(
         &mut self,
-        var: Option<super::Variable>,
-        vertex_labels: Vec<crate::meta::Label>,
-        properties: Option<(super::Property, super::FieldValue)>,
+        _var: Option<Variable>,
+        _vertex_labels: Vec<crate::meta::Label>,
+        _properties: Option<(Property, FieldValue)>,
     ) -> Self::Output {
-        todo!()
+        (1, 1)
     }
 
     fn visit_relationship_pattern(
         &mut self,
-        direction: super::RelationshipDirection,
-        var: Option<super::Variable>,
+        direction: RelationshipDirection,
+        var: Option<Variable>,
         edge_labels: Vec<crate::meta::Label>,
         range: (Option<i32>, Option<i32>),
-        properties: Option<(super::Property, super::FieldValue)>,
+        properties: Option<(Property, FieldValue)>,
     ) -> Self::Output {
         todo!()
     }
@@ -265,26 +305,26 @@ impl LogVisitor for Log {
     fn visit_property_or_labels_expression(
         &mut self,
         atom: Box<CypherNode>,
-        property_lookups: Vec<super::SchemaName>,
-        node_labels: Vec<super::NodeLabel>,
+        property_lookups: Vec<SchemaName>,
+        node_labels: Vec<NodeLabel>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_atom(
         &mut self,
-        literal: Option<super::Literal>,
-        expressions: Vec<super::Expression>,
+        literal: Option<Literal>,
+        expressions: Vec<Expression>,
         sub_expression: Option<Box<CypherNode>>,
-        is_variable: Option<super::Variable>,
+        is_variable: Option<Variable>,
     ) -> Self::Output {
         todo!()
     }
 
     fn visit_filter_expression(
         &mut self,
-        id_in_coll: (super::Variable, super::Expression),
-        where_clause: Option<super::Expression>,
+        id_in_coll: (Variable, Expression),
+        where_clause: Option<Expression>,
     ) -> Self::Output {
         todo!()
     }
@@ -299,9 +339,9 @@ impl LogVisitor for Log {
 
     fn visit_function_invocation(
         &mut self,
-        is_exists: (bool, Option<(super::NameSpace, super::Variable)>),
+        is_exists: (bool, Option<(NameSpace, Variable)>),
         is_distinct: bool,
-        expressions: Vec<super::Expression>,
+        expressions: Vec<Expression>,
     ) -> Self::Output {
         todo!()
     }
