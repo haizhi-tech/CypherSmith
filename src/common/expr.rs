@@ -1,11 +1,4 @@
-use super::RandomGenerator;
-
-// pub enum Variable {
-//     UnescapedSymbolicName,
-//     EscapedSymbolicName,
-//     HexLetter,
-//     Function,
-// }
+use super::{RandomGenerator, VariableManager, VariableKind};
 
 #[derive(Debug, Default)]
 pub struct Variable {
@@ -25,30 +18,34 @@ impl Variable {
 // one ast tree use one
 #[derive(Debug, Default)]
 pub struct VariableGenerator {
-    variable_name: String,
+    name: String,
     number: u32,
+    pub manager: VariableManager,
 }
 
 impl VariableGenerator {
     pub fn new() -> Self {
         VariableGenerator {
-            variable_name: "v".to_string(),
+            name: "v".to_string(),
             number: 0u32,
+            manager: VariableManager::default(),
         }
         // Variable::
     }
 
     pub fn current_variable(&self) -> String {
-        self.variable_name.clone() + &self.number.to_string()
+        self.name.clone() + &self.number.to_string()
     }
 
     pub fn new_variable(&mut self) -> Variable {
         self.number += 1u32;
-        Variable::new(self.variable_name.clone() + &self.number.to_string())
+        Variable::new(self.name.clone() + &self.number.to_string())
     }
 
     pub fn get_old_variable(&mut self) -> Variable {
-        Variable::new(self.variable_name.clone() + &self.number.to_string())
+        let mut random = RandomGenerator::new();
+        let old_number = random.d100() % (self.number as i32);
+        Variable::new(self.name.clone() + &old_number.to_string())
     }
 
     pub fn get_procedure_method(&mut self) -> Variable {
@@ -81,7 +78,7 @@ impl NameSpace {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default,)]
 pub struct Expression {
     expression_name: String,
 }
@@ -325,26 +322,3 @@ pub const RESERVED_WORD: &'static [&'static str] = &[
     "With",
     "Xor",
 ];
-
-#[cfg(test)]
-mod tests {
-    use super::{RandomGenerator, SchemaName, VariableGenerator};
-
-    #[test]
-    fn test_variable_generator() {
-        let mut var = VariableGenerator::new();
-        println!("{:?}", var);
-        for _ in 0..5 {
-            let new_var = var.new_variable();
-            println!("{:?}", new_var);
-        }
-        println!("{:?}", var);
-    }
-
-    #[test]
-    fn test_schema_name() {
-        let mut random_gen = RandomGenerator::new();
-        let new_schema_name = SchemaName::new(&mut random_gen);
-        println!("{:?}", new_schema_name);
-    }
-}

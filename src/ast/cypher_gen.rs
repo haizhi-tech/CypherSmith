@@ -5,7 +5,7 @@ use super::{
 };
 use crate::common::{
     Expression, Literal, NameSpace, NodeLabel, PropertyExpression, RandomGenerator,
-    RelationshipDirection, VariableGenerator,
+    RelationshipDirection, VariableGenerator, VariableKind
 };
 use crate::meta::GraphSchema;
 
@@ -54,10 +54,10 @@ impl CypherGenerator {
         self.visit_match()
     }
 
-    pub fn gen_expression(&mut self) -> Expression {
-        let mut expr_generator = ExprGenerator::new(self);
-        expr_generator.visit()
-    }
+    // pub fn gen_expression(&mut self) -> Expression {
+    //     let mut expr_generator = ExprGenerator::new(self);
+    //     expr_generator.visit()
+    // }
 
     // #[inline]
     pub fn gen_where_expression(&mut self) -> Option<Expression> {
@@ -813,6 +813,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
             let var = if self.random.bool() {
                 let variable = self.variables.new_variable();
+                self.variables.manager.add_type(variable.get_name(), VariableKind::Vertex);
                 projection_items_string += " AS ";
                 projection_items_string += &variable.get_name();
                 Some(variable)
@@ -912,6 +913,7 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut pattern_part_string = String::new();
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
+            self.variables.manager.add_type(variable.get_name(), VariableKind::Path);
             pattern_part_string += &variable.get_name();
             pattern_part_string += "=";
             Some(variable)
@@ -977,6 +979,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
+            self.variables.manager.add_type(variable.get_name(), VariableKind::Vertex);
             node_pattern_string += &variable.get_name();
             Some(variable)
         } else {
@@ -1042,6 +1045,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
+            self.variables.manager.add_type(variable.get_name(), VariableKind::Edge);
             relationship_pattern_string += &variable.get_name();
             Some(variable)
         } else {
@@ -1152,11 +1156,11 @@ impl CypherNodeVisitor for CypherGenerator {
 
         // todo: need more simplify method.
         let select_number = if self.limit < 0 {
-            let unrelated = vec![0, 1, 3, 10, 14];
+            let unrelated = vec![0, 2, 9, 13];
             let idx = self.random.d6() % 4;
             unrelated[idx as usize]
         } else {
-            self.random.d20() % 15
+            self.random.d20() % 14
         };
 
 
@@ -1168,14 +1172,14 @@ impl CypherNodeVisitor for CypherGenerator {
                 (Some(literal), vec![], None, None)
             }
             // Parameter: $ SymbolicName|Integer
-            1 => {
-                atom_string += "$";
-                let variable = self.variables.get_symbolic_or_integer();
-                atom_string += &variable.get_name();
-                (None, vec![], None, Some(variable))
-            }
+            // 1 => {
+            //     atom_string += "$";
+            //     let variable = self.variables.get_symbolic_or_integer();
+            //     atom_string += &variable.get_name();
+            //     (None, vec![], None, Some(variable))
+            // }
             // CaseExpression: CASE expression? (WHEN expression THEN expression)+ (ELSE expression)? END
-            2 => {
+            1 => {
                 atom_string += "CASE";
                 let mut expressions = vec![];
                 if self.random.bool() {
@@ -1219,12 +1223,12 @@ impl CypherNodeVisitor for CypherGenerator {
                 (None, expressions, None, None)
             }
             // `COUNT`
-            3 => {
+            2 => {
                 atom_string += "COUNT (*)";
                 (None, vec![], None, None)
             }
             // ListComprehension: [FilterExpression (| Expression)?]
-            4 => {
+            3 => {
                 atom_string += "[";
                 let mut expressions = vec![];
 
@@ -1245,7 +1249,7 @@ impl CypherNodeVisitor for CypherGenerator {
                 (None, expressions, Some(Box::new(filter_node)), None)
             }
             // PatternComprehension: [ (Variable =)? RelationshipsPattern (where Expression)? | Expression]
-            5 => {
+            4 => {
                 atom_string += "[";
                 // true = is variable
                 let variable = if self.random.bool() {
@@ -1288,7 +1292,7 @@ impl CypherNodeVisitor for CypherGenerator {
                 )
             }
             // (ALL|ANY|NONE|SINGLE) ( FilterExpression )
-            6 | 7 | 8 | 9 => {
+            6 | 7 | 8 | 5 => {
                 let rel = vec!["ALL", "ANY", "SINGLE", "NONE"];
                 let (filter_expression, filter_expression_string) = self.visit_filter_expression();
                 atom_string += rel[(self.random.d6() % 3) as usize];
@@ -1299,13 +1303,13 @@ impl CypherNodeVisitor for CypherGenerator {
                 (None, vec![], Some(Box::new(filter_expression)), None)
             }
             // RelationshipsPattern： NodePattern (RelationShipPattern, NodePattern)*
-            10 => {
+            9 => {
                 let (relationships_node, relationships_string) = self.visit_relationships_pattern();
                 atom_string += &relationships_string;
                 (None, vec![], Some(Box::new(relationships_node)), None)
             }
             // ParenthesizedExpression: ( Expression )
-            11 => {
+            10 => {
                 // let expression = Expression::new();
                 let mut expr_generator = ExprGenerator::new(self);
                 let expression = expr_generator.visit();
@@ -1317,13 +1321,13 @@ impl CypherNodeVisitor for CypherGenerator {
                 (None, vec![expression], None, None)
             }
             // FunctionInvocation
-            12 => {
+            11 => {
                 let (function_node, function_string) = self.visit_function_invocation();
                 atom_string += &function_string;
                 (None, vec![], Some(Box::new(function_node)), None)
             }
             // ExistentialSubquery
-            13 => {
+            12 => {
                 atom_string += "EXISTS {";
                 if self.random.bool() {
                     let (regular_node, regular_string) = self.visit_regular_query();
@@ -1349,7 +1353,7 @@ impl CypherNodeVisitor for CypherGenerator {
                 }
             }
             // Variable
-            14 => {
+            13 => {
                 let variable = self.variables.get_old_variable();
                 atom_string += &variable.get_name();
                 (None, vec![], None, Some(variable))

@@ -7,7 +7,7 @@ mod transform;
 // pub use expr::{Variable};
 pub use cypher::{CypherNode, LogVisitor};
 pub use cypher_gen::CypherGenerator;
-pub use expr::{ExpressionNodeVisitor};
+pub use expr::ExpressionNodeVisitor;
 pub use expr_gen::ExprGenerator;
 pub use transform::TransformVisitor;
 
@@ -93,6 +93,7 @@ mod tests {
         });
         let graph_schema = GraphSchema::new("test".to_string(), labels);
         let mut generator = CypherGenerator::new_schema(&graph_schema);
+        generator.limit = constants::DEFAULT_EXPRESSION_LIMIT;
         let mut expr_generator = ExprGenerator::new(&mut generator);
         let ans = expr_generator.visit();
         println!("{}", ans.get_name());
@@ -153,7 +154,7 @@ mod tests {
         });
         let graph_schema = GraphSchema::new("test".to_string(), labels);
         let mut generator = CypherGenerator::new_schema(&graph_schema);
-        generator.limit = 0;
+        generator.limit = constants::DEFAULT_EXPRESSION_LIMIT;
         let expression_string = generator.visit_expression();
         println!("{}", expression_string);
     }

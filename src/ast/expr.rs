@@ -6,14 +6,14 @@ macro_rules! expression_nodes_impl {
         $name:ident { $( $(#[doc = $param_doc:expr])* $param:ident : $type:ty, )* },
     )* ) => {
         paste! {
-            pub enum ExpressionNode {
-                $(
-                    $(#[doc = $node_doc])*
-                    $name {
-                        $( $(#[doc = $param_doc])* $param : $type ,)*
-                    },
-                )*
-            }
+            // pub enum ExpressionNode {
+            //     $(
+            //         $(#[doc = $node_doc])*
+            //         $name {
+            //             $( $(#[doc = $param_doc])* $param : $type ,)*
+            //         },
+            //     )*
+            // }
 
             pub trait ExpressionNodeVisitor {
                 type Output;

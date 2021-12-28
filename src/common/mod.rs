@@ -2,6 +2,7 @@ mod expr;
 mod log;
 mod rand;
 mod typedef;
+mod manager;
 
 pub use self::rand::RandomGenerator;
 pub use expr::{
@@ -10,11 +11,12 @@ pub use expr::{
 };
 pub use log::Log;
 pub use typedef::*;
+pub use manager::{VariableKind, VariableManager};
 
 #[cfg(test)]
 mod tests {
-    use super::Log;
     use crate::ast::{CypherNode, LogVisitor};
+    use super::{Log, RandomGenerator, SchemaName, VariableGenerator};
 
     #[test]
     fn test_get_info() {
@@ -60,5 +62,23 @@ mod tests {
             "Stat Result:\ntotal nodes: {}\nmax level: {}",
             sum_nodes, max_level
         );
+    }
+
+    #[test]
+    fn test_variable_generator() {
+        let mut var = VariableGenerator::new();
+        println!("{:?}", var);
+        for _ in 0..5 {
+            let new_var = var.new_variable();
+            println!("{:?}", new_var);
+        }
+        println!("{:?}", var);
+    }
+
+    #[test]
+    fn test_schema_name() {
+        let mut random_gen = RandomGenerator::new();
+        let new_schema_name = SchemaName::new(&mut random_gen);
+        println!("{:?}", new_schema_name);
     }
 }
