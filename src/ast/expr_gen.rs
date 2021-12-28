@@ -1,33 +1,33 @@
-use super::{CypherGenerator, ExpressionNodeVisitor};
+use super::{CypherGenerator, ExpressionNodeVisitor, constants};
 use crate::common::{Expression, RandomGenerator};
 
 pub struct ExprGenerator<'a> {
     random: RandomGenerator,
     cypher: &'a mut CypherGenerator,
-    complexity: usize,
-    limit: usize,
+    // graph_schema: &'a mut GraphSchema,
+    complexity: i32,
+    limit: i32,
 }
 
 impl<'a> ExprGenerator<'a> {
     pub fn new(cypher: &'a mut CypherGenerator) -> ExprGenerator<'a> {
+        // 
+        cypher.limit -= constants::DEFAULT_EXPRESSION_LIMIT;
         ExprGenerator {
             random: RandomGenerator::new(),
             cypher,
             complexity: 0,
-            limit: 5usize,
+            limit: constants::DEFAULT_EXPRESSION_LIMIT,
         }
     }
 }
 
 impl ExprGenerator<'_> {
-    pub fn visit(&mut self) -> (String, Expression) {
+    pub fn visit(&mut self) -> Expression {
+        self.complexity = 0;
         let expression = self.visit_expression();
-        (expression.clone(), Expression::from(expression))
+        Expression::from(expression)
     }
-
-    // pub fn get_name(&self) -> String {
-    //     self.expr_string.clone()
-    // }
 
     pub fn visit_atom(&mut self) -> String {
         self.cypher.visit_expression()
@@ -136,7 +136,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         //     ret += add_sub_oper[opt_number as usize];
         //     ret += &self.visit_multiply_divide_modulo_expression();
         // }
-        if (self.random.d6() == 1) && (self.complexity < self.limit) {
+        if (self.random.d20() == 1) && (self.complexity < self.limit) {
             self.complexity += 1;
 
             let opt_number = self.random.d2();
@@ -159,7 +159,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         //     }
         // }
 
-        if (self.random.d6() == 1) && (self.complexity < self.limit) {
+        if (self.random.d20() == 1) && (self.complexity < self.limit) {
             let opt_number = self.random.d6();
             if opt_number < 3 {
                 self.complexity += 1;
@@ -179,7 +179,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         //     ret += "^";
         //     ret += &self.visit_unary_add_or_subtract_expression();
         // }
-        if (self.random.d6() == 1) && (self.complexity < self.limit) {
+        if (self.random.d20() == 1) && (self.complexity < self.limit) {
             self.complexity += 1;
 
             ret += "^";
@@ -244,28 +244,21 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
 
     // property_or_labels_expression: atom property_look_up* nodelabels?(nodelabels*)
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
-        // atom
-        let mut ret = self.visit_atom();
-        // // property*: "."
-        // for _ in 0..self.random.d2() {
-        //     ret += ".";
-        //     ret += "SchemaName(WIP)";
-        // }
+        // add complexity.
+        self.complexity += 1;
 
-        // // NodeLabels:
-        // for _ in 0..self.random.d2() {
-        //     let node_label = NodeLabel::new();
-        //     ret += &node_label.get_name();
-        // }
+        // atom
+        let mut ret = self.cypher.visit_expression();
 
         // PropertyKeyName
-        if self.random.d6() == 1 {
+        if self.random.d6() == 1 && (self.complexity < self.limit) {
             ret += ".";
             ret += "SchemaName(WIP)";
-        } else if self.random.d6() == 1 {
+        } else if self.random.d6() == 1 && (self.complexity < self.limit) {
             // NodelabelName
             let node_label = self.cypher.graph_schema.rand_vertex_label(&mut self.random);
             // let node_label = NodeLabel::new();
+            ret += " ";
             ret += &node_label.get_name();
         }
 
@@ -301,15 +294,18 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         if self.complexity < self.limit {
             match self.random.d9() {
                 0 => {
+                    self.complexity += 1;
                     ret += " IN ";
                     ret += &self.visit_property_or_labels_expression();
                 }
                 1 => {
+                    self.complexity += 1;
                     ret += " [";
                     ret += &self.visit_expression();
                     ret += "]";
                 }
                 2 => {
+                    self.complexity += 1;
                     ret += " [";
                     let loop_number = self.random.d100();
                     ret += &self.visit_expression();
@@ -346,38 +342,5 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         }
         ret
     }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::ExprGenerator;
-    use crate::ast::CypherGenerator;
-    use crate::common::RandomGenerator;
-
-    #[test]
-    fn test_expression() {
-        let mut cypher_generator = CypherGenerator::new();
-        let mut x = ExprGenerator {
-            random: RandomGenerator::new(),
-            cypher: &mut cypher_generator,
-            complexity: 0,
-            limit: 10usize,
-        };
-        let (ans, _) = x.visit();
-        println!("{}", ans);
-    }
-
-    #[test]
-    fn test_atom() {
-        let mut cypher_generator = CypherGenerator::new();
-        let mut x = ExprGenerator {
-            random: RandomGenerator::new(),
-            cypher: &mut cypher_generator,
-            complexity: 0,
-            limit: 10usize,
-        };
-        let ans = x.visit_atom();
-        println!("{}", ans);
-    }
+    
 }

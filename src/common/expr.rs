@@ -81,7 +81,7 @@ impl NameSpace {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Expression {
     expression_name: String,
 }
