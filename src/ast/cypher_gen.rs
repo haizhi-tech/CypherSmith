@@ -5,7 +5,7 @@ use super::{
 };
 use crate::common::{
     Expression, Literal, NameSpace, NodeLabel, PropertyExpression, RandomGenerator,
-    RelationshipDirection, VariableGenerator, VariableKind
+    RelationshipDirection, VariableGenerator, DataKind
 };
 use crate::meta::GraphSchema;
 
@@ -813,7 +813,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
             let var = if self.random.bool() {
                 let variable = self.variables.new_variable();
-                self.variables.manager.add_type(variable.get_name(), VariableKind::Vertex);
+                // self.variables.manager.add_variable(variable.get_name(), DataKind::Vertex);
                 projection_items_string += " AS ";
                 projection_items_string += &variable.get_name();
                 Some(variable)
@@ -913,7 +913,7 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut pattern_part_string = String::new();
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
-            self.variables.manager.add_type(variable.get_name(), VariableKind::Path);
+            self.variables.manager.add_variable(variable.get_name(), DataKind::Path);
             pattern_part_string += &variable.get_name();
             pattern_part_string += "=";
             Some(variable)
@@ -979,7 +979,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
-            self.variables.manager.add_type(variable.get_name(), VariableKind::Vertex);
+            self.variables.manager.add_variable(variable.get_name(), DataKind::Vertex);
             node_pattern_string += &variable.get_name();
             Some(variable)
         } else {
@@ -1045,7 +1045,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         let var = if self.random.bool() {
             let variable = self.variables.new_variable();
-            self.variables.manager.add_type(variable.get_name(), VariableKind::Edge);
+            self.variables.manager.add_variable(variable.get_name(), DataKind::Edge);
             relationship_pattern_string += &variable.get_name();
             Some(variable)
         } else {

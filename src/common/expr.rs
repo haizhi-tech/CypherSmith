@@ -1,4 +1,4 @@
-use super::{RandomGenerator, VariableManager, VariableKind};
+use super::{RandomGenerator, VariableManager, DataKind};
 
 #[derive(Debug, Default)]
 pub struct Variable {
@@ -80,42 +80,47 @@ impl NameSpace {
 
 #[derive(Debug, Default,)]
 pub struct Expression {
-    expression_name: String,
+    name: String,
+    kind: DataKind,
 }
 
 impl Expression {
     pub fn new() -> Self {
         Expression {
-            expression_name: "expression(WIP)".to_string(),
+            name: "expression(WIP)".to_string(),
+            kind: DataKind::default(),
         }
     }
 
     pub fn get_name(&self) -> String {
-        self.expression_name.clone()
+        self.name.clone()
     }
 }
 
 impl From<String> for Expression {
     fn from(s: String) -> Self {
-        Expression { expression_name: s }
+        Expression {
+            name: s,
+            kind: DataKind::default(),
+        }
     }
 }
 
 #[derive(Debug, Default)]
 pub struct PropertyExpression {
-    expression_name: String,
+    name: String,
 }
 
 // todo: need to implementation.
 impl PropertyExpression {
     pub fn new() -> Self {
         PropertyExpression {
-            expression_name: "a.age".to_string(),
+            name: "a.age".to_string(),
         }
     }
 
     pub fn get_name(&self) -> String {
-        self.expression_name.clone()
+        self.name.clone()
     }
 }
 
@@ -127,11 +132,6 @@ pub struct NodeLabel {
 // todo: need to implementation get old nodelabel.
 impl NodeLabel {
     pub fn new() -> Self {
-        // let label_name = if random.d12() < 6 { // Variable name
-
-        // } else { // label_name == ReserverdWord
-        //     let x = ReservedWord::Delete;
-        // };
         NodeLabel {
             label_name: "NodeLabel(WIP)".to_string(),
         }

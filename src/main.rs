@@ -27,9 +27,9 @@ fn main() {
     // query number add 1
     driver.add_query();
 
-    // logger recording intermediate information
-    let mut logger = Log::new();
-    logger.execute(Box::new(cypher_ast));
+    // log_record recording intermediate information
+    let mut log_record = Log::new();
+    log_record.execute(Box::new(cypher_ast));
 
-    logger.report();
+    log_record.report();
 }

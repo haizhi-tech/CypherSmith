@@ -11,7 +11,7 @@ pub use expr::{
 };
 pub use log::Log;
 pub use typedef::*;
-pub use manager::{VariableKind, VariableManager};
+pub use manager::{DataKind, VariableManager};
 
 #[cfg(test)]
 mod tests {
