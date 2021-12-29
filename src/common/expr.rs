@@ -1,4 +1,4 @@
-use super::{RandomGenerator, VariableManager, DataKind};
+use super::{DataKind, RandomGenerator, VariableManager};
 
 #[derive(Debug, Default)]
 pub struct Variable {
@@ -78,7 +78,7 @@ impl NameSpace {
     }
 }
 
-#[derive(Debug, Default,)]
+#[derive(Debug, Default)]
 pub struct Expression {
     name: String,
     kind: DataKind,

@@ -13,8 +13,8 @@ pub enum DataKind {
 }
 
 impl Default for DataKind {
-    fn default() -> Self { 
-        DataKind::Null 
+    fn default() -> Self {
+        DataKind::Null
     }
 }
 

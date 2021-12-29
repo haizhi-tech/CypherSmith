@@ -1,4 +1,4 @@
-use super::{CypherGenerator, ExpressionNodeVisitor, constants};
+use super::{constants, CypherGenerator, ExpressionNodeVisitor};
 use crate::common::{Expression, RandomGenerator};
 
 pub struct ExprGenerator<'a> {
@@ -10,7 +10,7 @@ pub struct ExprGenerator<'a> {
 
 impl<'a> ExprGenerator<'a> {
     pub fn new(cypher: &'a mut CypherGenerator) -> ExprGenerator<'a> {
-        // 
+        //
         cypher.limit -= constants::DEFAULT_EXPRESSION_LIMIT;
         ExprGenerator {
             random: RandomGenerator::new(),
@@ -289,5 +289,4 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         }
         ret
     }
-    
 }

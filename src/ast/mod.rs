@@ -19,7 +19,7 @@ mod constants {
 #[cfg(test)]
 mod tests {
 
-    use super::{CypherGenerator, ExprGenerator, constants};
+    use super::{constants, CypherGenerator, ExprGenerator};
     use crate::common::{DataType, Property};
     use crate::meta::{GraphSchema, Label, LabelKind};
 
@@ -217,6 +217,4 @@ mod tests {
         let (_, expression_string) = generator.test_match_clause();
         println!("{}", expression_string);
     }
-
-    
 }

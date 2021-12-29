@@ -1,8 +1,8 @@
 mod expr;
 mod log;
+mod manager;
 mod rand;
 mod typedef;
-mod manager;
 
 pub use self::rand::RandomGenerator;
 pub use expr::{
@@ -10,13 +10,13 @@ pub use expr::{
     SchemaName, Variable, VariableGenerator,
 };
 pub use log::Log;
-pub use typedef::*;
 pub use manager::{DataKind, VariableManager};
+pub use typedef::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{CypherNode, LogVisitor};
     use super::{Log, RandomGenerator, SchemaName, VariableGenerator};
+    use crate::ast::{CypherNode, LogVisitor};
 
     #[test]
     fn test_get_info() {
