@@ -375,13 +375,6 @@ impl From<Box<CypherNode>> for CypherNode {
     }
 }
 
-// impl From<&CypherNode> for CypherNode {
-//     fn from(x: &CypherNode) -> Self {
-//         // NOTE: deref-move syntax only works for Box<T>
-//         *x
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     // use super::*;

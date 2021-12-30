@@ -3,15 +3,17 @@ mod log;
 mod manager;
 mod rand;
 mod typedef;
+mod util;
 
 pub use self::rand::RandomGenerator;
 pub use expr::{
-    Expression, Literal, NameSpace, NodeLabel, PropertyExpression, RelationshipDirection,
-    SchemaName, Variable, VariableGenerator,
+    Expr, ExprKind, Expression, Literal, NameSpace, NodeLabel, PropertyExpression,
+    RelationshipDirection, SchemaName, Variable, VariableGenerator,
 };
 pub use log::Log;
 pub use manager::{DataKind, VariableManager};
 pub use typedef::*;
+pub use util::*;
 
 #[cfg(test)]
 mod tests {

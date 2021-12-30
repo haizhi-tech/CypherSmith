@@ -1,3 +1,4 @@
+use super::util::RESERVED_WORD;
 use super::{DataKind, RandomGenerator, VariableManager};
 
 #[derive(Debug, Default)]
@@ -166,31 +167,15 @@ impl SchemaName {
     }
 }
 
-pub struct ExpressionGenerator {}
-
 #[derive(Debug)]
-pub enum ExprKind {
-    /// A binary operator expression (e.g., `a+2`).
-    BinOp(BinOpKind),
-    /// A unary operator expression (e.g., `-x`).
-    UnOp(UnOpKind),
-    /// A comparison chain (e.g. `a+b>1+c=d`).
-    /// Invariant: v.len() > 0.
-    Cmp(CmpKind),
-    /// A literal.
-    Lit(Literal),
-    /// A Variable,
-    Variable(String),
-    /// A predicate variable,
-    PredicateVariable(String),
-    /// A case expression (e.g. ...),
-    Case,
-    /// A property access (e.g. `a.age`),
-    Property,
-    /// A function invocation (e.g. `sin(a)`),
-    Invocation,
-    /// A predicate function,
-    PredicateFunction,
+pub enum Literal {
+    Double(f64),
+    Integer(u64),
+    String(String),
+    Boolean(bool),
+    // List(Vec<Box<ExpressionNode>>),
+    // Map(Vec<(String, Box<ExpressionNode>)>),
+    Null,
 }
 
 #[derive(Debug)]
@@ -252,14 +237,56 @@ pub enum CmpKind {
 }
 
 #[derive(Debug)]
-pub enum Literal {
-    Double(f64),
-    Integer(u64),
-    String(String),
-    Boolean(bool),
-    // List(Vec<Box<ExpressionNode>>),
-    // Map(Vec<(String, Box<ExpressionNode>)>),
-    Null,
+pub enum PredicateFunctionKind {
+    /// The `ALL` function.
+    All,
+    /// The `ANY` function.
+    Any,
+    /// The `NONE` function.
+    None,
+    /// The `SINGLE` function.
+    Single,
+}
+
+/// Case Alternative.
+///
+/// # Synopsis
+/// > **WHEN** *Expression* **THEN** *Expression*
+#[derive(Debug)]
+pub struct CaseAlternative {
+    pub condition: Box<Expr>,
+    pub value: Box<Expr>,
+}
+
+#[derive(Debug)]
+pub struct Expr {
+    kind: ExprKind,
+}
+
+#[derive(Debug)]
+pub enum ExprKind {
+    /// A binary operator expression (e.g., `a+2`).
+    BinOp(BinOpKind, Box<Expr>, Box<Expr>),
+    /// A unary operator expression (e.g., `-x`).
+    UnOp(UnOpKind, Box<Expr>),
+    /// A comparison chain (e.g. `a+b>1+c=d`).
+    Cmp(CmpKind, Vec<(CmpKind, Box<Expr>)>),
+    /// A literal.
+    Lit(Literal),
+    /// A Variable,
+    Variable(String),
+    /// A predicate variable,
+    PredicateVariable(String),
+    /// A case expression (e.g. ...),
+    Case(Option<Box<Expr>>, Vec<CaseAlternative>, Option<Box<Expr>>),
+    /// A property access (e.g. `a.age`),
+    Property(Box<Expr>, String),
+    /// A function invocation (e.g. `sin(a)`),
+    Invocation(Box<Expr>, bool, Vec<Expr>),
+    /// A predicate function,
+    PredicateFunction(PredicateFunctionKind, String, Box<Expr>, Box<Expr>),
+    /// A apoc expression,
+    ApocExpression(String, Vec<Expr>),
 }
 
 #[derive(Debug)]
@@ -273,52 +300,3 @@ pub enum RelationshipDirection {
     // - [] -
     None,
 }
-
-pub const RESERVED_WORD: &'static [&'static str] = &[
-    "All",
-    "And",
-    "As",
-    "Asc",
-    "Ascending",
-    "By",
-    "Case",
-    "Create",
-    "Delete",
-    "Desc",
-    "Descending",
-    "Detach",
-    "Delete",
-    "Distinct",
-    "Drop",
-    "Else",
-    "End",
-    "Ends",
-    "Exists",
-    "False",
-    "In",
-    "Is",
-    "Limit",
-    "Match",
-    "Merge",
-    "Not",
-    "Null",
-    "On",
-    "Optional",
-    "Or",
-    "Order",
-    "Remove",
-    "Return",
-    "Set",
-    "Skip",
-    "Starts",
-    "Then",
-    "To",
-    "True",
-    "Union",
-    "Unique",
-    "Unwind",
-    "When",
-    "Where",
-    "With",
-    "Xor",
-];
