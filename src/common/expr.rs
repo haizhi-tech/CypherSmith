@@ -178,7 +178,7 @@ pub enum Literal {
     Null,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BinOpKind {
     /// The `OR` operator (logical or).
     Or,
@@ -210,7 +210,7 @@ pub enum BinOpKind {
     EndsWith,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum UnOpKind {
     /// The `+` operator (positive).
     Pos,
@@ -220,7 +220,7 @@ pub enum UnOpKind {
     Not,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum CmpKind {
     /// The `<>` operator.
     Ne,
@@ -263,6 +263,12 @@ pub struct Expr {
     kind: ExprKind,
 }
 
+impl From<ExprKind> for Expr {
+    fn from(kind: ExprKind) -> Self {
+        Expr { kind }
+    }
+}
+
 #[derive(Debug)]
 pub enum ExprKind {
     /// A binary operator expression (e.g., `a+2`).
@@ -270,7 +276,7 @@ pub enum ExprKind {
     /// A unary operator expression (e.g., `-x`).
     UnOp(UnOpKind, Box<Expr>),
     /// A comparison chain (e.g. `a+b>1+c=d`).
-    Cmp(CmpKind, Vec<(CmpKind, Box<Expr>)>),
+    Cmp(Box<Expr>, Vec<(CmpKind, Box<Expr>)>),
     /// A literal.
     Lit(Literal),
     /// A Variable,

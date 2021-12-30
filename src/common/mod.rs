@@ -6,10 +6,11 @@ mod typedef;
 mod util;
 
 pub use self::rand::RandomGenerator;
-pub use expr::{
-    Expr, ExprKind, Expression, Literal, NameSpace, NodeLabel, PropertyExpression,
-    RelationshipDirection, SchemaName, Variable, VariableGenerator,
-};
+// pub use expr::{
+//     Expr, ExprKind, Expression, Literal, NameSpace, NodeLabel, PropertyExpression,
+//     RelationshipDirection, SchemaName, Variable, VariableGenerator,
+// };
+pub use expr::*;
 pub use log::Log;
 pub use manager::{DataKind, VariableManager};
 pub use typedef::*;

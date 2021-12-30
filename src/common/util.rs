@@ -1,4 +1,5 @@
-pub const RESERVED_WORD: &'static [&'static str] = &[
+// pub const RESERVED_WORD: &'static [&'static str] = &[
+pub const RESERVED_WORD: &[&str] = &[
     "All",
     "And",
     "As",

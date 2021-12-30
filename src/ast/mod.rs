@@ -13,6 +13,7 @@ pub use expr_gen::ExprGenerator;
 pub use transform::TransformVisitor;
 
 mod constants {
+    pub const DEFAULT_LOOP_LIMIT: i32 = 3;
     pub const DEFAULT_EXPRESSION_LIMIT: i32 = 5;
     pub const DEFAULT_QUERY_LIMIT: i32 = 15;
 }
