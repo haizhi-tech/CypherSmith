@@ -1,6 +1,6 @@
 use crate::common::{
-    Expression, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
-    RelationshipDirection, SchemaName, Variable,
+    Expr, FieldValue, NameSpace, NodeLabel, Property, PropertyExpression, RelationshipDirection,
+    Variable,
 };
 use crate::meta::Label;
 
@@ -165,7 +165,7 @@ cypher_nodes_impl! {
     /// WithQuery
     With {
         projection_body: Box<CypherNode>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     },
 
     /// Union
@@ -198,8 +198,8 @@ cypher_nodes_impl! {
         is_distinct: bool,
         projection_items: Box<CypherNode>,
         order: Option<Box<CypherNode>>,
-        skip: Option<Expression>,
-        limit: Option<Expression>,
+        skip: Option<Expr>,
+        limit: Option<Expr>,
     },
 
     /// ProjectionItems
@@ -209,12 +209,12 @@ cypher_nodes_impl! {
         // is_all = true: *
         is_all: bool,
         // expression as variable.
-        expressions: Vec<(Expression, Option<Variable>)>,
+        expressions: Vec<(Expr, Option<Variable>)>,
     },
 
     /// Order: order by sort_items(expression (asc|desc|...|)?)+
     Order {
-        sort_items: Vec<(Expression, Option<String>)>,
+        sort_items: Vec<(Expr, Option<String>)>,
     },
 
     /// Match
@@ -222,12 +222,12 @@ cypher_nodes_impl! {
     Match {
         is_optional: bool,
         pattern: Box<CypherNode>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     },
 
     /// Unwind : UNWIND Expression AS Variable
     Unwind {
-        expression: Expression,
+        expression: Expr,
         variable: Variable,
     },
 
@@ -251,14 +251,14 @@ cypher_nodes_impl! {
     /// Delete
     Delete {
         is_detach: bool,
-        expressions: Vec<Expression>,
+        expressions: Vec<Expr>,
     },
 
     /// Set
     Set {
-        property_set: Vec<(PropertyExpression, Expression)>,
-        variable_set: Vec<(Variable, Expression)>,
-        variable_add: Vec<(Variable, Expression)>,
+        property_set: Vec<(PropertyExpression, Expr)>,
+        variable_set: Vec<(Variable, Expr)>,
+        variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<NodeLabel>)>,
     },
 
@@ -266,7 +266,7 @@ cypher_nodes_impl! {
     ExplicitProcedureInvocation {
         // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
-        expressions: Vec<Expression>,
+        expressions: Vec<Expr>,
     },
 
     /// ImplicitProcedureInvocation
@@ -279,7 +279,7 @@ cypher_nodes_impl! {
     YieldItems {
         // todo: need to modify ProecdureResultField result.
         yield_items: Vec<(Option<Variable>, Variable)>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     },
 
     /// Remove
@@ -328,44 +328,44 @@ cypher_nodes_impl! {
         properties: Option<(Property, FieldValue)>,
     },
 
-    /// Expression relation.
-    ///
-    /// PropertyOrLabelsExpression: Atom (PropertyLookUp)* NodeLabels? (=NodeLabel*)
-    PropertyOrLabelsExpression {
-        atom: Box<CypherNode>,
-        property_lookups: Vec<SchemaName>,
-        node_labels: Vec<NodeLabel>,
-    },
+    // /// Expression relation.
+    // ///
+    // /// PropertyOrLabelsExpression: Atom (PropertyLookUp)* NodeLabels? (=NodeLabel*)
+    // PropertyOrLabelsExpression {
+    //     atom: Box<CypherNode>,
+    //     property_lookups: Vec<SchemaName>,
+    //     node_labels: Vec<NodeLabel>,
+    // },
 
-    /// Atom
-    ///
-    Atom {
-        literal: Option<Literal>,
-        expressions: Vec<Expression>,
-        sub_expression: Option<Box<CypherNode>>,
-        is_variable: Option<Variable>,
-    },
+    // /// Atom
+    // ///
+    // Atom {
+    //     literal: Option<Literal>,
+    //     expressions: Vec<Expression>,
+    //     sub_expression: Option<Box<CypherNode>>,
+    //     is_variable: Option<Variable>,
+    // },
 
-    /// FilterExpression:
-    ///
-    FilterExpression {
-        id_in_coll: (Variable, Expression),
-        where_clause: Option<Expression>,
-    },
+    // /// FilterExpression:
+    // ///
+    // FilterExpression {
+    //     id_in_coll: (Variable, Expression),
+    //     where_clause: Option<Expression>,
+    // },
 
-    /// RelationshipsPattern
-    ///
-    RelationshipsPattern {
-        node_pattern: Box<CypherNode>,
-        pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
-    },
+    // /// RelationshipsPattern
+    // ///
+    // RelationshipsPattern {
+    //     node_pattern: Box<CypherNode>,
+    //     pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
+    // },
 
-    /// FunctionInvocation
-    FunctionInvocation {
-        is_exists: (bool, Option<(NameSpace, Variable)>),
-        is_distinct: bool,
-        expressions: Vec<Expression>,
-    },
+    // /// FunctionInvocation
+    // FunctionInvocation {
+    //     is_exists: (bool, Option<(NameSpace, Variable)>),
+    //     is_distinct: bool,
+    //     expressions: Vec<Expression>,
+    // },
 }
 
 impl From<Box<CypherNode>> for CypherNode {

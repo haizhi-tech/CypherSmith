@@ -1,5 +1,6 @@
 use super::util::RESERVED_WORD;
-use super::{DataKind, RandomGenerator, VariableManager};
+use super::{DataKind, Property, RandomGenerator, VariableManager};
+use crate::ast::CypherNode;
 
 #[derive(Debug, Default)]
 pub struct Variable {
@@ -168,14 +169,42 @@ impl SchemaName {
 }
 
 #[derive(Debug)]
-pub enum Literal {
-    Double(f64),
-    Integer(u64),
-    String(String),
-    Boolean(bool),
-    // List(Vec<Box<ExpressionNode>>),
-    // Map(Vec<(String, Box<ExpressionNode>)>),
-    Null,
+pub struct Expr {
+    kind: ExprKind,
+}
+
+impl From<ExprKind> for Expr {
+    fn from(kind: ExprKind) -> Self {
+        Expr { kind }
+    }
+}
+
+#[derive(Debug)]
+pub enum ExprKind {
+    /// A binary operator expression (e.g., `a+2`).
+    BinOp(BinOpKind, Box<Expr>, Box<Expr>),
+    /// A unary operator expression (e.g., `-x`).
+    UnOp(UnOpKind, Box<Expr>),
+    /// A comparison chain (e.g. `a+b>1+c=d`).
+    Cmp(Box<Expr>, Vec<(CmpKind, Box<Expr>)>),
+    /// A literal.
+    Lit(Literal),
+    /// A Variable,
+    Variable(Variable),
+    /// A predicate variable,
+    PredicateVariable(String),
+    /// A case expression (e.g. ...),
+    Case(Option<Box<Expr>>, Vec<CaseAlternative>, Option<Box<Expr>>),
+    /// A property access (e.g. `a.age`),
+    Property(Box<Expr>, Property),
+    /// A function invocation (e.g. `sin(a)`),
+    Invocation(Box<Expr>, bool, Vec<Expr>),
+    /// A predicate function,
+    PredicateFunction(PredicateFunctionKind, Variable, Box<Expr>, Box<Expr>),
+    /// A apoc expression,
+    ApocExpression(String, Vec<Expr>),
+    /// A Subquery expression,
+    SubQuery(SubQueryKind, Box<CypherNode>),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -218,6 +247,12 @@ pub enum UnOpKind {
     Neg,
     /// The `NOT` operator (logical not).
     Not,
+    /// The `IS NULL` operator.
+    Null,
+    /// The `IS NOT NULL` operator.
+    NotNull,
+    //// The `()` operator.
+    Parentheses,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -236,7 +271,7 @@ pub enum CmpKind {
     Ge,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum PredicateFunctionKind {
     /// The `ALL` function.
     All,
@@ -246,6 +281,12 @@ pub enum PredicateFunctionKind {
     None,
     /// The `SINGLE` function.
     Single,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum SubQueryKind {
+    /// The `Exists { Query }` function
+    Exists,
 }
 
 /// Case Alternative.
@@ -259,43 +300,6 @@ pub struct CaseAlternative {
 }
 
 #[derive(Debug)]
-pub struct Expr {
-    kind: ExprKind,
-}
-
-impl From<ExprKind> for Expr {
-    fn from(kind: ExprKind) -> Self {
-        Expr { kind }
-    }
-}
-
-#[derive(Debug)]
-pub enum ExprKind {
-    /// A binary operator expression (e.g., `a+2`).
-    BinOp(BinOpKind, Box<Expr>, Box<Expr>),
-    /// A unary operator expression (e.g., `-x`).
-    UnOp(UnOpKind, Box<Expr>),
-    /// A comparison chain (e.g. `a+b>1+c=d`).
-    Cmp(Box<Expr>, Vec<(CmpKind, Box<Expr>)>),
-    /// A literal.
-    Lit(Literal),
-    /// A Variable,
-    Variable(String),
-    /// A predicate variable,
-    PredicateVariable(String),
-    /// A case expression (e.g. ...),
-    Case(Option<Box<Expr>>, Vec<CaseAlternative>, Option<Box<Expr>>),
-    /// A property access (e.g. `a.age`),
-    Property(Box<Expr>, String),
-    /// A function invocation (e.g. `sin(a)`),
-    Invocation(Box<Expr>, bool, Vec<Expr>),
-    /// A predicate function,
-    PredicateFunction(PredicateFunctionKind, String, Box<Expr>, Box<Expr>),
-    /// A apoc expression,
-    ApocExpression(String, Vec<Expr>),
-}
-
-#[derive(Debug)]
 pub enum RelationshipDirection {
     // <- [] -
     Left,
@@ -305,4 +309,15 @@ pub enum RelationshipDirection {
     Both,
     // - [] -
     None,
+}
+
+#[derive(Debug)]
+pub enum Literal {
+    Double(f64),
+    Integer(u64),
+    String(String),
+    Boolean(bool),
+    List(Vec<Expr>),
+    Map(Vec<(String, Expr)>),
+    Null,
 }

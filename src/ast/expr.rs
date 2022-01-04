@@ -73,12 +73,6 @@ expression_nodes_impl! {
     /// PropertyOrLabelsExpression: Atom, (PropertyLookup)*, (NodeLabels)+
     PropertyOrLabelsExpression {},
 
-    /// StringOperatorExpression: (STARTS WITH | ENDS WITH | CONTAINS)? PropertyOrLabelsExpression
-    StringOperatorExpression {},
-
-    /// ListOperatorExpression:
-    ListOperatorExpression {},
-
-    /// NullOperatorExpression: IS NULL/ IS NOT NULL.
-    NullOperatorExpression {},
+    /// Atom: IS NOT NULL
+    Atom {},
 }

@@ -21,7 +21,7 @@ impl Driver {
     }
 
     // ast tree construct
-    pub fn execute(&self) -> (CypherNode, String) {
+    pub fn execute(&self) -> CypherNode {
         // let transform = TransformVisitor::new();
         // let mut ast_generator = CypherGenerator::new();
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);

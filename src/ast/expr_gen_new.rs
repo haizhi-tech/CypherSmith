@@ -1,5 +1,9 @@
-use super::{constants, CypherGenerator, ExpressionNodeVisitor};
-use crate::common::{BinOpKind, CmpKind, Expr, ExprKind, RandomGenerator, UnOpKind};
+use super::cypher_gen_new::CypherGenerator;
+use super::{constants, ExpressionNodeVisitor};
+use crate::common::{
+    BinOpKind, CaseAlternative, CmpKind, Expr, ExprKind, Literal, PredicateFunctionKind,
+    RandomGenerator, SubQueryKind, UnOpKind,
+};
 
 pub struct ExprGenerator<'a> {
     random: RandomGenerator,
@@ -23,10 +27,10 @@ impl<'a> ExprGenerator<'a> {
 }
 
 impl ExprGenerator<'_> {
-    // pub fn visit(&mut self) -> Expr {
-    //     self.complexity = 0;
-    //     self.visit_expression()
-    // }
+    pub fn visit(&mut self) -> Expr {
+        self.complexity = 0;
+        self.visit_expression()
+    }
 }
 
 impl ExprGenerator<'_> {
@@ -55,6 +59,35 @@ impl ExprGenerator<'_> {
     pub fn random_unary_kind(&mut self) -> UnOpKind {
         let kinds = [UnOpKind::Pos, UnOpKind::Neg];
         kinds[self.random.d2() as usize % 2]
+    }
+
+    pub fn random_string_kind(&mut self) -> BinOpKind {
+        let kinds = [
+            BinOpKind::StartsWith,
+            BinOpKind::EndsWith,
+            BinOpKind::Contains,
+        ];
+        kinds[self.random.d6() as usize % 3]
+    }
+
+    pub fn random_null_kind(&mut self) -> UnOpKind {
+        let kinds = [UnOpKind::Null, UnOpKind::NotNull];
+        kinds[self.random.d2() as usize % 2]
+    }
+
+    // todo: need implement
+    pub fn random_literal(&mut self) -> Literal {
+        Literal::Integer(1)
+    }
+
+    pub fn random_predicate_function_kind(&mut self) -> PredicateFunctionKind {
+        let kinds = [
+            PredicateFunctionKind::All,
+            PredicateFunctionKind::Any,
+            PredicateFunctionKind::None,
+            PredicateFunctionKind::Single,
+        ];
+        kinds[self.random.d6() as usize % 4]
     }
 }
 
@@ -259,23 +292,164 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         unary_expr
     }
 
+    /// ### Synopsis
+    /// StringListNullOperatorExpression: PropertyOrLabelsExpression (String|List|NullExpression)*
     fn visit_string_list_null_operator_expression(&mut self) -> Self::Output {
-        todo!()
+        let mut query_expr = self.visit_property_or_labels_expression();
+
+        // expr loop
+        while self.random.d20() == 1 {
+            if self.random.d6() == 1 {
+                // StringOperatorExpression
+                let mut string_expr = self.visit_property_or_labels_expression();
+                let kind = ExprKind::BinOp(
+                    self.random_string_kind(),
+                    Box::new(query_expr),
+                    Box::new(string_expr),
+                );
+                query_expr = Expr::from(kind);
+            } else if self.random.d6() == 1 {
+                // ListOperatorExpression: In | [Expression] | [Expression..Expression]
+                if self.random.d6() > 2 {
+                    // In PropertyOrLabelsExpression
+                    let list_expr = self.visit_property_or_labels_expression();
+                    let kind =
+                        ExprKind::BinOp(BinOpKind::In, Box::new(query_expr), Box::new(list_expr));
+                    query_expr = Expr::from(kind);
+                } else if self.random.d6() == 1 {
+                    // [Expression]
+                    let list_expr = self.visit();
+                    let kind = ExprKind::BinOp(
+                        BinOpKind::Index,
+                        Box::new(query_expr),
+                        Box::new(list_expr),
+                    );
+                    query_expr = Expr::from(kind);
+                } else if self.random.d6() == 1 {
+                    // todo: [(Expression)?..(Expression)?]
+                }
+            } else if self.random.d6() == 1 {
+                // NullOperatorExpression
+                let kind = ExprKind::UnOp(self.random_null_kind(), Box::new(query_expr));
+                query_expr = Expr::from(kind);
+            }
+        }
+
+        query_expr
     }
 
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
+        // let mut pro_expr = self.visit_atom();
+        // pro_expr
         todo!()
     }
 
-    fn visit_string_operator_expression(&mut self) -> Self::Output {
-        todo!()
-    }
+    /// Atom: Literal | Parameter | Case Expression | COUNT (*)
+    fn visit_atom(&mut self) -> Self::Output {
+        let select_number = self.random.d20();
 
-    fn visit_list_operator_expression(&mut self) -> Self::Output {
-        todo!()
-    }
+        let atom_expr = match select_number {
+            // CaseExpression
+            1 => {
+                let case_expr = if self.random.d6() == 1 {
+                    self.complexity += 1;
+                    Some(Box::new(self.visit()))
+                } else {
+                    None
+                };
 
-    fn visit_null_operator_expression(&mut self) -> Self::Output {
-        todo!()
+                let mut case_alternatives = Vec::new();
+
+                // WHEN expression THEN expression.
+                for _ in 0..self.random.d2() + 1 {
+                    case_alternatives.push(CaseAlternative {
+                        condition: Box::new(self.visit()),
+                        value: Box::new(self.visit()),
+                    })
+                }
+
+                let else_expr = if self.random.d6() == 1 {
+                    self.complexity += 1;
+                    Some(Box::new(self.visit()))
+                } else {
+                    None
+                };
+
+                Expr::from(ExprKind::Case(case_expr, case_alternatives, else_expr))
+            }
+            // COUNT (*)
+            2 => Expr::from(ExprKind::Lit(Literal::String("COUNT (*)".to_string()))),
+            // ListComprehension
+            3 => {
+                todo!()
+            }
+            // PatternComprehension
+            4 => {
+                todo!()
+            }
+            // ALL|ANY|NONE|SINGLE ( FilterExpression )
+            // FilterExpression: Variable IN Expression WhereExpression
+            5 => {
+                let var = self.cypher.variables.get_old_variable();
+                let expression = self.visit();
+                let where_expression = self.visit();
+                let kind = ExprKind::PredicateFunction(
+                    self.random_predicate_function_kind(),
+                    var,
+                    Box::new(expression),
+                    Box::new(where_expression),
+                );
+                Expr::from(kind)
+            }
+            // RelationShipsPattern
+            6 => {
+                todo!()
+            }
+            // ParenthesizedExpression
+            7 => {
+                let expression = self.visit();
+                Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
+            }
+            // FunctionInvocation: FunctionName ( (DISTINCT)? Expression*)
+            8 => {
+                // FunctionName: Namespace.SymbolicName
+                // todo: need to implement NameSpace and SymbolicName
+                let function = Expr::from(ExprKind::Lit(Literal::String(
+                    "atlas.shortestpath".to_string(),
+                )));
+
+                let is_distinct = self.random.bool();
+
+                // Vec<Expression>
+                let mut vec_expr = Vec::new();
+                for _ in 0..self.random.d2() {
+                    vec_expr.push(self.visit());
+                }
+
+                Expr::from(ExprKind::Invocation(
+                    Box::new(function),
+                    is_distinct,
+                    vec_expr,
+                ))
+            }
+            // ExistentialSubquery
+            9 => {
+                // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
+                let query = self.cypher.visit();
+                Expr::from(ExprKind::SubQuery(SubQueryKind::Exists, Box::new(query)))
+            }
+            // Variable
+            10 => {
+                let var = self.cypher.variables.get_old_variable();
+                Expr::from(ExprKind::Variable(var))
+            }
+            // Literal Expression
+            0 | _ => {
+                self.complexity += 1;
+                Expr::from(ExprKind::Lit(self.random_literal()))
+            }
+        };
+
+        atom_expr
     }
 }

@@ -1,7 +1,7 @@
 use std::{cmp, error::Error};
 
 use super::{
-    Expression, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
+    Expr, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
     RelationshipDirection, SchemaName, Variable,
 };
 use crate::ast::{CypherNode, LogVisitor};
@@ -127,7 +127,7 @@ impl LogVisitor for Log {
     fn visit_with(
         &mut self,
         projection_body: Box<CypherNode>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     ) -> Self::Output {
         todo!()
     }
@@ -153,8 +153,8 @@ impl LogVisitor for Log {
         is_distinct: bool,
         projection_items: Box<CypherNode>,
         order: Option<Box<CypherNode>>,
-        skip: Option<Expression>,
-        limit: Option<Expression>,
+        skip: Option<Expr>,
+        limit: Option<Expr>,
     ) -> Self::Output {
         todo!()
     }
@@ -162,12 +162,12 @@ impl LogVisitor for Log {
     fn visit_projection_items(
         &mut self,
         is_all: bool,
-        expressions: Vec<(Expression, Option<Variable>)>,
+        expressions: Vec<(Expr, Option<Variable>)>,
     ) -> Self::Output {
         todo!()
     }
 
-    fn visit_order(&mut self, sort_items: Vec<(Expression, Option<String>)>) -> Self::Output {
+    fn visit_order(&mut self, sort_items: Vec<(Expr, Option<String>)>) -> Self::Output {
         todo!()
     }
 
@@ -175,13 +175,13 @@ impl LogVisitor for Log {
         &mut self,
         _is_optional: bool,
         pattern: Box<CypherNode>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     ) -> Self::Output {
         let (pattern_nodes, pattern_height) = self.visit(pattern);
         (pattern_nodes + 1, pattern_height + 1)
     }
 
-    fn visit_unwind(&mut self, expression: Expression, variable: Variable) -> Self::Output {
+    fn visit_unwind(&mut self, expression: Expr, variable: Variable) -> Self::Output {
         todo!()
     }
 
@@ -205,15 +205,15 @@ impl LogVisitor for Log {
         todo!()
     }
 
-    fn visit_delete(&mut self, is_detach: bool, expressions: Vec<Expression>) -> Self::Output {
+    fn visit_delete(&mut self, is_detach: bool, expressions: Vec<Expr>) -> Self::Output {
         todo!()
     }
 
     fn visit_set(
         &mut self,
-        property_set: Vec<(PropertyExpression, Expression)>,
-        variable_set: Vec<(Variable, Expression)>,
-        variable_add: Vec<(Variable, Expression)>,
+        property_set: Vec<(PropertyExpression, Expr)>,
+        variable_set: Vec<(Variable, Expr)>,
+        variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<NodeLabel>)>,
     ) -> Self::Output {
         todo!()
@@ -222,7 +222,7 @@ impl LogVisitor for Log {
     fn visit_explicit_procedure_invocation(
         &mut self,
         procedure_name: (NameSpace, Variable),
-        expressions: Vec<Expression>,
+        expressions: Vec<Expr>,
     ) -> Self::Output {
         todo!()
     }
@@ -237,7 +237,7 @@ impl LogVisitor for Log {
     fn visit_yield_items(
         &mut self,
         yield_items: Vec<(Option<Variable>, Variable)>,
-        where_clause: Option<Expression>,
+        where_clause: Option<Expr>,
     ) -> Self::Output {
         todo!()
     }
@@ -305,47 +305,47 @@ impl LogVisitor for Log {
         (1, 1)
     }
 
-    fn visit_property_or_labels_expression(
-        &mut self,
-        atom: Box<CypherNode>,
-        property_lookups: Vec<SchemaName>,
-        node_labels: Vec<NodeLabel>,
-    ) -> Self::Output {
-        todo!()
-    }
+    // fn visit_property_or_labels_expression(
+    //     &mut self,
+    //     atom: Box<CypherNode>,
+    //     property_lookups: Vec<SchemaName>,
+    //     node_labels: Vec<NodeLabel>,
+    // ) -> Self::Output {
+    //     todo!()
+    // }
 
-    fn visit_atom(
-        &mut self,
-        literal: Option<Literal>,
-        expressions: Vec<Expression>,
-        sub_expression: Option<Box<CypherNode>>,
-        is_variable: Option<Variable>,
-    ) -> Self::Output {
-        todo!()
-    }
+    // fn visit_atom(
+    //     &mut self,
+    //     literal: Option<Literal>,
+    //     expressions: Vec<Expression>,
+    //     sub_expression: Option<Box<CypherNode>>,
+    //     is_variable: Option<Variable>,
+    // ) -> Self::Output {
+    //     todo!()
+    // }
 
-    fn visit_filter_expression(
-        &mut self,
-        id_in_coll: (Variable, Expression),
-        where_clause: Option<Expression>,
-    ) -> Self::Output {
-        todo!()
-    }
+    // fn visit_filter_expression(
+    //     &mut self,
+    //     id_in_coll: (Variable, Expression),
+    //     where_clause: Option<Expression>,
+    // ) -> Self::Output {
+    //     todo!()
+    // }
 
-    fn visit_relationships_pattern(
-        &mut self,
-        node_pattern: Box<CypherNode>,
-        pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
-    ) -> Self::Output {
-        todo!()
-    }
+    // fn visit_relationships_pattern(
+    //     &mut self,
+    //     node_pattern: Box<CypherNode>,
+    //     pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
+    // ) -> Self::Output {
+    //     todo!()
+    // }
 
-    fn visit_function_invocation(
-        &mut self,
-        is_exists: (bool, Option<(NameSpace, Variable)>),
-        is_distinct: bool,
-        expressions: Vec<Expression>,
-    ) -> Self::Output {
-        todo!()
-    }
+    // fn visit_function_invocation(
+    //     &mut self,
+    //     is_exists: (bool, Option<(NameSpace, Variable)>),
+    //     is_distinct: bool,
+    //     expressions: Vec<Expression>,
+    // ) -> Self::Output {
+    //     todo!()
+    // }
 }

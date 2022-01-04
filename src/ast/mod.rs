@@ -1,5 +1,6 @@
 mod cypher;
 mod cypher_gen;
+mod cypher_gen_new;
 mod expr;
 mod expr_gen;
 mod expr_gen_new;
@@ -7,9 +8,10 @@ mod transform;
 
 // pub use expr::{Variable};
 pub use cypher::{CypherNode, LogVisitor};
-pub use cypher_gen::CypherGenerator;
+// pub use cypher_gen::CypherGenerator;
+pub use cypher_gen_new::CypherGenerator;
 pub use expr::ExpressionNodeVisitor;
-pub use expr_gen::ExprGenerator;
+pub use expr_gen_new::ExprGenerator;
 pub use transform::TransformVisitor;
 
 mod constants {
@@ -28,16 +30,24 @@ mod tests {
     #[test]
     fn cypher_generator_test() {
         let mut generator = CypherGenerator::new();
-        let (_, cypher_string) = generator.visit();
-        println!("{}", cypher_string);
+        let cypher_node = generator.visit();
+        println!("{:?}", cypher_node);
     }
+
+    // #[test]
+    // fn expression_generator_test() {
+    //     let mut cypher_generator = CypherGenerator::new();
+    //     let mut x = ExprGenerator::new(&mut cypher_generator);
+    //     let ans = x.visit();
+    //     println!("{}", ans.get_name());
+    // }
 
     #[test]
     fn expression_generator_test() {
         let mut cypher_generator = CypherGenerator::new();
         let mut x = ExprGenerator::new(&mut cypher_generator);
         let ans = x.visit();
-        println!("{}", ans.get_name());
+        println!("{:?}", ans);
     }
 
     #[test]
@@ -98,7 +108,8 @@ mod tests {
         generator.limit = constants::DEFAULT_EXPRESSION_LIMIT;
         let mut expr_generator = ExprGenerator::new(&mut generator);
         let ans = expr_generator.visit();
-        println!("{}", ans.get_name());
+        // println!("{}", ans.get_name());
+        println!("{:?}", ans);
     }
 
     #[test]
@@ -216,7 +227,7 @@ mod tests {
         });
         let graph_schema = GraphSchema::new("test".to_string(), labels);
         let mut generator = CypherGenerator::new_schema(&graph_schema);
-        let (_, expression_string) = generator.test_match_clause();
-        println!("{}", expression_string);
+        let expression_string = generator.test_match_clause();
+        println!("{:?}", expression_string);
     }
 }
