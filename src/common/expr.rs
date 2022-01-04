@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::util::RESERVED_WORD;
 use super::{DataKind, Property, RandomGenerator, VariableManager};
 use crate::ast::CypherNode;
@@ -14,6 +16,12 @@ impl Variable {
 
     pub fn get_name(&self) -> String {
         self.name.clone()
+    }
+}
+
+impl Display for Variable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.name)
     }
 }
 
@@ -169,17 +177,6 @@ impl SchemaName {
 }
 
 #[derive(Debug)]
-pub struct Expr {
-    kind: ExprKind,
-}
-
-impl From<ExprKind> for Expr {
-    fn from(kind: ExprKind) -> Self {
-        Expr { kind }
-    }
-}
-
-#[derive(Debug)]
 pub enum ExprKind {
     /// A binary operator expression (e.g., `a+2`).
     BinOp(BinOpKind, Box<Expr>, Box<Expr>),
@@ -192,7 +189,7 @@ pub enum ExprKind {
     /// A Variable,
     Variable(Variable),
     /// A predicate variable,
-    PredicateVariable(String),
+    PredicateVariable(Variable),
     /// A case expression (e.g. ...),
     Case(Option<Box<Expr>>, Vec<CaseAlternative>, Option<Box<Expr>>),
     /// A property access (e.g. `a.age`),
@@ -271,6 +268,19 @@ pub enum CmpKind {
     Ge,
 }
 
+impl Display for CmpKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            CmpKind::Ne => f.write_str("<>"),
+            CmpKind::Eq => f.write_str("="),
+            CmpKind::Lt => f.write_str("<"),
+            CmpKind::Gt => f.write_str(">"),
+            CmpKind::Le => f.write_str("<="),
+            CmpKind::Ge => f.write_str(">="),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum PredicateFunctionKind {
     /// The `ALL` function.
@@ -281,6 +291,17 @@ pub enum PredicateFunctionKind {
     None,
     /// The `SINGLE` function.
     Single,
+}
+
+impl Display for PredicateFunctionKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            PredicateFunctionKind::All => f.write_str("all"),
+            PredicateFunctionKind::Any => f.write_str("any"),
+            PredicateFunctionKind::None => f.write_str("none"),
+            PredicateFunctionKind::Single => f.write_str("single"),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -311,6 +332,14 @@ pub enum RelationshipDirection {
     None,
 }
 
+/// Literals
+///
+/// # Synopsis
+/// > - *DoubleLiteral*
+/// > - *IntegerLiteral*
+/// > - *StringLiteral*
+/// > - *BooleanLiteral* := **TRUE** | **FALSE**
+/// > - *NullLiteral* := **NULL**
 #[derive(Debug)]
 pub enum Literal {
     Double(f64),
@@ -320,4 +349,125 @@ pub enum Literal {
     List(Vec<Expr>),
     Map(Vec<(String, Expr)>),
     Null,
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Literal::Double(value) => f.write_fmt(format_args!("{}", value)),
+            Literal::Integer(value) => f.write_fmt(format_args!("{}", value)),
+            Literal::String(value) => f.write_fmt(format_args!("{}", value)),
+            Literal::Boolean(value) => f.write_str(if *value { "TRUE" } else { "FALSE" }),
+            Literal::List(list) => {
+                let items = list
+                    .iter()
+                    .map(|item| format!("{}", item))
+                    .collect::<Vec<String>>();
+                f.write_fmt(format_args!("[{}]", &items.join(", ")))
+            }
+            Literal::Map(entries) => {
+                let items = entries
+                    .iter()
+                    .map(|(k, v)| format!("{}: {}", k, v))
+                    .collect::<Vec<String>>();
+                f.write_fmt(format_args!("{{{}}}", items.join(", ")))
+            }
+            Literal::Null => f.write_str("NULL"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Expr {
+    kind: ExprKind,
+}
+
+impl From<ExprKind> for Expr {
+    fn from(kind: ExprKind) -> Self {
+        Expr { kind }
+    }
+}
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.kind {
+            ExprKind::BinOp(kind, lhs, rhs) => match kind {
+                BinOpKind::Or => f.write_fmt(format_args!("{} OR {}", lhs, rhs)),
+                BinOpKind::Xor => f.write_fmt(format_args!("{} XOR {}", lhs, rhs)),
+                BinOpKind::And => f.write_fmt(format_args!("{} AND {}", lhs, rhs)),
+                BinOpKind::Add => f.write_fmt(format_args!("{} + {}", lhs, rhs)),
+                BinOpKind::Sub => f.write_fmt(format_args!("{} - {}", lhs, rhs)),
+                BinOpKind::Mul => f.write_fmt(format_args!("{} * {}", lhs, rhs)),
+                BinOpKind::Div => f.write_fmt(format_args!("{} / {}", lhs, rhs)),
+                BinOpKind::Mod => f.write_fmt(format_args!("{} % {}", lhs, rhs)),
+                BinOpKind::Pow => f.write_fmt(format_args!("{} ^ {}", lhs, rhs)),
+                BinOpKind::Index => f.write_fmt(format_args!("{}[{}]", lhs, rhs)),
+                BinOpKind::In => f.write_fmt(format_args!("{} IN {}", lhs, rhs)),
+                BinOpKind::Contains => f.write_fmt(format_args!("{} CONTAINS {}", lhs, rhs)),
+                BinOpKind::StartsWith => f.write_fmt(format_args!("{} STARTS WITH {}", lhs, rhs)),
+                BinOpKind::EndsWith => f.write_fmt(format_args!("{} ENDS WITH {}", lhs, rhs)),
+            },
+            ExprKind::UnOp(kind, expr) => match kind {
+                UnOpKind::Pos => f.write_fmt(format_args!("+{}", expr)),
+                UnOpKind::Neg => f.write_fmt(format_args!("-{}", expr)),
+                UnOpKind::Not => f.write_fmt(format_args!("NOT {}", expr)),
+                UnOpKind::Null => todo!(),
+                UnOpKind::NotNull => todo!(),
+                UnOpKind::Parentheses => todo!(),
+            },
+            ExprKind::Cmp(cmp_expr, tails) => {
+                let tail_str: String = tails
+                    .iter()
+                    .map(|(kind, expr)| format!("{} {}", kind, expr))
+                    .collect::<Vec<String>>()
+                    .join(" ");
+                f.write_fmt(format_args!("{} {}", cmp_expr, &tail_str))
+            }
+            ExprKind::Lit(lit) => f.write_fmt(format_args!("{}", lit)),
+            ExprKind::Variable(name) | ExprKind::PredicateVariable(name) => {
+                f.write_str(&name.get_name())
+            }
+            ExprKind::Case(case_expression, case_alternatives, else_expression) => {
+                let head_str = if let Some(expr) = case_expression {
+                    format!("CASE {}", expr)
+                } else {
+                    "CASE".to_string()
+                };
+                let middle_str = case_alternatives
+                    .iter()
+                    .map(|case_alternative| {
+                        format!(
+                            "\n WHEN {} THEN {}",
+                            case_alternative.condition, case_alternative.value
+                        )
+                    })
+                    .collect::<Vec<String>>()
+                    .join("");
+                let tail_str = if let Some(expr) = else_expression {
+                    format!("\nELSE {}", expr)
+                } else {
+                    format!("")
+                };
+                f.write_fmt(format_args!(
+                    "{} {} {} \nEND",
+                    &head_str, &middle_str, &tail_str
+                ))
+            }
+            ExprKind::Property(expr, str) => f.write_fmt(format_args!("{}.{}", expr, str)),
+            ExprKind::Invocation(expr, _, params) => {
+                let params_str: String = params
+                    .iter()
+                    .map(|param| format!("{}", param))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                f.write_fmt(format_args!("{}({})", expr, &params_str))
+            }
+            ExprKind::PredicateFunction(kind, var, list, predicate) => f.write_fmt(format_args!(
+                "{}({} IN {} WHERE {})",
+                kind, var, list, predicate
+            )),
+            ExprKind::ApocExpression(_, _) => todo!(),
+            ExprKind::SubQuery(_, _) => todo!(),
+        }
+    }
 }

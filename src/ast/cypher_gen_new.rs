@@ -11,18 +11,16 @@ use crate::meta::GraphSchema;
 use super::expr_gen_new::ExprGenerator;
 
 pub struct CypherGenerator {
-    // query_string: String,
-    pub graph_schema: GraphSchema,
     random: RandomGenerator,
-    pub variables: VariableGenerator,
     // limit: total expression complexity.
     pub limit: i32,
+    pub graph_schema: GraphSchema,
+    pub variables: VariableGenerator,
 }
 
 impl CypherGenerator {
     pub fn new() -> Self {
         CypherGenerator {
-            // query_string: String::new(),
             graph_schema: GraphSchema::default(),
             random: RandomGenerator::new(),
             variables: VariableGenerator::new(),

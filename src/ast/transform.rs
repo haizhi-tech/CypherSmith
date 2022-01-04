@@ -18,6 +18,10 @@ impl TransformVisitor {
         // self.visit(query)
         todo!()
     }
+
+    pub fn transform_expr(&mut self, expr: Expr) -> String {
+        expr.to_string()
+    }
 }
 
 impl ConvertVisitor for TransformVisitor {
@@ -304,7 +308,7 @@ impl ConvertVisitor for TransformVisitor {
         // query_string += &first_string;
 
         // Pattern: Vec<PatternPart>, pattern_parts length >= 1
-        for pattern_part in pattern_parts.into_iter() {
+        for pattern_part in pattern_parts.into_iter().skip(1) {
             query_string += ",";
             query_string += &self.visit(pattern_part);
         }

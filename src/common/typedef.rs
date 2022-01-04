@@ -103,3 +103,28 @@ impl Property {
 
     // todo: random value generator.
 }
+
+impl Display for Property {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.name.as_ref())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DataType, Property};
+
+    #[test]
+    fn test_property() {
+        let pro = Property {
+            name: "age".to_string(),
+            prop_id: 1,
+            prop_type: DataType::Int32,
+            is_pk: false,
+            nullable: true,
+            is_delete: false,
+        };
+
+        println!("{}", pro)
+    }
+}

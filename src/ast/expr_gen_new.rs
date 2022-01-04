@@ -301,7 +301,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         while self.random.d20() == 1 {
             if self.random.d6() == 1 {
                 // StringOperatorExpression
-                let mut string_expr = self.visit_property_or_labels_expression();
+                let string_expr = self.visit_property_or_labels_expression();
                 let kind = ExprKind::BinOp(
                     self.random_string_kind(),
                     Box::new(query_expr),
@@ -348,7 +348,12 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
     fn visit_atom(&mut self) -> Self::Output {
         let select_number = self.random.d20();
 
-        let atom_expr = match select_number {
+        match select_number {
+            // Literal Expression
+            0 => {
+                self.complexity += 1;
+                Expr::from(ExprKind::Lit(self.random_literal()))
+            }
             // CaseExpression
             1 => {
                 let case_expr = if self.random.d6() == 1 {
@@ -443,13 +448,10 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 let var = self.cypher.variables.get_old_variable();
                 Expr::from(ExprKind::Variable(var))
             }
-            // Literal Expression
-            0 | _ => {
+            _ => {
                 self.complexity += 1;
                 Expr::from(ExprKind::Lit(self.random_literal()))
             }
-        };
-
-        atom_expr
+        }
     }
 }
