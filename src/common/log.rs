@@ -200,7 +200,7 @@ impl LogVisitor for Log {
     fn visit_merge(
         &mut self,
         pattern_part: Box<CypherNode>,
-        merge_actions: Vec<Box<CypherNode>>,
+        merge_actions: Vec<(String, Box<CypherNode>)>,
     ) -> Self::Output {
         todo!()
     }
@@ -270,7 +270,7 @@ impl LogVisitor for Log {
 
     fn visit_pattern_element(
         &mut self,
-        _parentheses: i32,
+        _parentheses: bool,
         pattern_element: (Box<CypherNode>, Vec<(Box<CypherNode>, Box<CypherNode>)>),
     ) -> Self::Output {
         let (mut nodes, mut height) = self.visit(pattern_element.0);
@@ -299,7 +299,8 @@ impl LogVisitor for Log {
         direction: RelationshipDirection,
         var: Option<Variable>,
         edge_labels: Vec<crate::meta::Label>,
-        range: (Option<i32>, Option<i32>),
+        is_range: bool,
+        range: (Option<i32>, Option<(bool, Option<i32>)>),
         properties: Option<(Property, FieldValue)>,
     ) -> Self::Output {
         (1, 1)

@@ -338,10 +338,12 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         query_expr
     }
 
+    /// PropertyOrLabelsExpression: Atom {PropertyLookup}* NodeLabel*
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
-        // let mut pro_expr = self.visit_atom();
-        // pro_expr
+        // Propertylet mut query_expr = self.visit_atom();
+        // if let ExprKind::Variable(var) = query_expr.kind {
         todo!()
+        // }
     }
 
     /// Atom: Literal | Parameter | Case Expression | COUNT (*)

@@ -406,7 +406,12 @@ impl CypherNodeVisitor for CypherGenerator {
         for _ in 0..self.random.d2() {
             let merge_action = self.visit_set();
 
-            merge_actions.push(Box::new(merge_action));
+            let opt = if self.random.bool() {
+                "MATCH ".to_string()
+            } else {
+                "CREATE ".to_string()
+            };
+            merge_actions.push((opt, Box::new(merge_action)));
         }
 
         CypherNode::Merge {
@@ -442,7 +447,7 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut label_set = vec![];
 
         // first set_item
-        match self.random.d6() {
+        match self.random.d6() % 3 {
             0 => {
                 let mut expr_generator = ExprGenerator::new(self);
                 let property = PropertyExpression::new();
@@ -671,7 +676,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     // pattern_element: NodePattern (RelationshipPattern NodePattern)*
     fn visit_pattern_element(&mut self) -> Self::Output {
-        let parentheses_number = self.random.d2();
+        let parenthesis = self.random.bool();
 
         let node_pattern_node = self.visit_node_pattern();
         let node_pattern = Box::new(node_pattern_node);
@@ -690,7 +695,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
         // let x = (0..parentheses_number).into_iter().map(|_| ")").collect::<String>();
         CypherNode::PatternElement {
-            parentheses: parentheses_number,
+            parenthesis,
             pattern_element: (node_pattern, pattern_element_chain),
         }
     }
@@ -766,19 +771,34 @@ impl CypherNodeVisitor for CypherGenerator {
             }
         }
 
-        let range = if self.random.bool() {
-            let range_start = self.random.d2();
-
-            let range_end = if self.random.bool() {
-                let range_end = range_start + self.random.d2();
-                Some(range_end)
+        let (is_range, range) = if self.random.bool() {
+            // 
+            let range_start = if self.random.bool() { 
+                Some(self.random.d2())
             } else {
                 None
             };
 
-            (Some(range_start), range_end)
+            let range_end = if self.random.bool() {
+                let is_range_end = true;
+                let range_end = if self.random.bool() {
+                    if let Some(range_start) = range_start {
+                        Some(range_start + self.random.d2())
+                    } else {
+                        Some(self.random.d2())
+                    }
+                } else {
+                    None
+                };
+                
+                Some((is_range_end, range_end))
+            } else {
+                None
+            };
+
+            (true, (range_start, range_end))
         } else {
-            (None, None)
+            (false, (None, None))
         };
 
         // todo: property logical.
@@ -795,6 +815,7 @@ impl CypherNodeVisitor for CypherGenerator {
             direction,
             var,
             edge_labels,
+            is_range,
             range,
             properties,
         }

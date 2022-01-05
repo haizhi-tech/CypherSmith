@@ -12,6 +12,7 @@ macro_rules! cypher_nodes_impl {
         $name:ident { $( $(#[doc = $param_doc:expr])* $param:ident : $type:ty, )* },
     )* ) => {
         paste! {
+            #[derive(Clone)]
             pub enum CypherNode {
                 $(
                     $(#[doc = $node_doc])*
@@ -245,7 +246,7 @@ cypher_nodes_impl! {
     /// Merge
     Merge {
         pattern_part: Box<CypherNode>,
-        merge_actions: Vec<Box<CypherNode>>,
+        merge_actions: Vec<(String, Box<CypherNode>)>,
     },
 
     /// Delete
@@ -308,7 +309,7 @@ cypher_nodes_impl! {
     ///
     /// Vec<(NodePattern, Vec<(RelationShipPattern, NodePattern)>)>
     PatternElement {
-        parentheses: i32,
+        parenthesis: bool,
         pattern_element: (Box<CypherNode>, Vec<(Box<CypherNode>, Box<CypherNode>)>),
     },
 
@@ -324,7 +325,8 @@ cypher_nodes_impl! {
         direction: RelationshipDirection,
         var: Option<Variable>,
         edge_labels: Vec<Label>,
-        range: (Option<i32>, Option<i32>),
+        is_range: bool,
+        range: (Option<i32>, Option<(bool, Option<i32>)>),
         properties: Option<(Property, FieldValue)>,
     },
 

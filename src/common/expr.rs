@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use super::util::RESERVED_WORD;
 use super::{DataKind, Property, RandomGenerator, VariableManager};
-use crate::ast::CypherNode;
+use crate::ast::{CypherNode, TransformVisitor};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Variable {
     name: String,
 }
@@ -71,7 +71,7 @@ impl VariableGenerator {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NameSpace {
     name_space: String,
 }
@@ -116,7 +116,7 @@ impl From<String> for Expression {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct PropertyExpression {
     name: String,
 }
@@ -134,7 +134,7 @@ impl PropertyExpression {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NodeLabel {
     label_name: String,
 }
@@ -176,7 +176,7 @@ impl SchemaName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprKind {
     /// A binary operator expression (e.g., `a+2`).
     BinOp(BinOpKind, Box<Expr>, Box<Expr>),
@@ -296,10 +296,10 @@ pub enum PredicateFunctionKind {
 impl Display for PredicateFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
-            PredicateFunctionKind::All => f.write_str("all"),
-            PredicateFunctionKind::Any => f.write_str("any"),
-            PredicateFunctionKind::None => f.write_str("none"),
-            PredicateFunctionKind::Single => f.write_str("single"),
+            PredicateFunctionKind::All => f.write_str("ALL"),
+            PredicateFunctionKind::Any => f.write_str("ANY"),
+            PredicateFunctionKind::None => f.write_str("NONE"),
+            PredicateFunctionKind::Single => f.write_str("SINGLE"),
         }
     }
 }
@@ -314,13 +314,13 @@ pub enum SubQueryKind {
 ///
 /// # Synopsis
 /// > **WHEN** *Expression* **THEN** *Expression*
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CaseAlternative {
     pub condition: Box<Expr>,
     pub value: Box<Expr>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RelationshipDirection {
     // <- [] -
     Left,
@@ -332,6 +332,26 @@ pub enum RelationshipDirection {
     None,
 }
 
+impl RelationshipDirection {
+    pub fn left_string(&self) -> String {
+        match self {
+            RelationshipDirection::Left => "<-[".to_string(),
+            RelationshipDirection::Right => "-[".to_string(),
+            RelationshipDirection::Both => "<-[".to_string(),
+            RelationshipDirection::None => "-[".to_string(),
+        }
+    }
+
+    pub fn right_string(&self) -> String {
+        match self {
+            RelationshipDirection::Left => "]-".to_string(),
+            RelationshipDirection::Right => "]->".to_string(),
+            RelationshipDirection::Both => "]->".to_string(),
+            RelationshipDirection::None => "]-".to_string(),
+        }
+    }
+}
+
 /// Literals
 ///
 /// # Synopsis
@@ -340,7 +360,7 @@ pub enum RelationshipDirection {
 /// > - *StringLiteral*
 /// > - *BooleanLiteral* := **TRUE** | **FALSE**
 /// > - *NullLiteral* := **NULL**
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Literal {
     Double(f64),
     Integer(u64),
@@ -377,9 +397,9 @@ impl Display for Literal {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Expr {
-    kind: ExprKind,
+    pub kind: ExprKind,
 }
 
 impl From<ExprKind> for Expr {
@@ -467,7 +487,98 @@ impl Display for Expr {
                 kind, var, list, predicate
             )),
             ExprKind::ApocExpression(_, _) => todo!(),
-            ExprKind::SubQuery(_, _) => todo!(),
+            ExprKind::SubQuery(_, expr) => {
+                // `Exists {Query}`
+                let mut transformer = TransformVisitor::new();
+                let result = transformer.exec(expr.clone());
+                f.write_fmt(format_args!("EXISTS {{{}}}", result))
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_binop_display() {
+        let ops = vec![
+            BinOpKind::Or,
+            BinOpKind::Xor,
+            BinOpKind::And,
+            BinOpKind::Add,
+            BinOpKind::Sub,
+            BinOpKind::Mul,
+            BinOpKind::Div,
+            BinOpKind::Mod,
+            BinOpKind::Pow,
+            BinOpKind::Index,
+            BinOpKind::In,
+            BinOpKind::Contains,
+            BinOpKind::StartsWith,
+            BinOpKind::EndsWith,
+        ];
+        let results = vec![
+            "a OR b",
+            "a XOR b",
+            "a AND b",
+            "a + b",
+            "a - b",
+            "a * b",
+            "a / b",
+            "a % b",
+            "a ^ b",
+            "a[b]",
+            "a IN b",
+            "a CONTAINS b",
+            "a STARTS WITH b",
+            "a ENDS WITH b",
+        ];
+
+        for (op, res) in ops.iter().zip(results.iter()) {
+            // let l_val = Expr {
+            //     kind: ExprKind::Variable("a".to_string()),
+            // };
+            // let r_val = Expr {
+
+            // };
+            // let expr = Expr {
+            //     kind: ExprKind::BinOp(*op, Box::new(l_val), Box::new(r_val)),
+            //     span: Span(0, 0),
+            // };
+            // assert_eq!(format!("{}", expr), res.to_string());
+        }
+    }
+
+    #[test]
+    fn test_unop_display() {
+        let ops = vec![UnOpKind::Pos, UnOpKind::Neg, UnOpKind::Not];
+        let results = vec!["+a", "-a", "NOT a"];
+
+        for (op, res) in ops.iter().zip(results.iter()) {
+            // let val = Expr {
+            //     kind: ExprKind::Variable("a".to_string()),
+            //     span: Span(0, 0),
+            // };
+            // let expr = Expr {
+            //     kind: ExprKind::UnOp(*op, Box::new(val)),
+            //     span: Span(0, 0),
+            // };
+            // assert_eq!(format!("{}", expr), res.to_string());
+        }
+    }
+
+    #[test]
+    fn test_property_display() {
+        // let l_val = Expr {
+        //     kind: ExprKind::Variable("a".to_string()),
+        //     span: Span(0, 0),
+        // };
+        // let expr = Expr {
+        //     kind: ExprKind::Property(Box::new(l_val), "prop".to_string()),
+        //     span: Span(0, 0),
+        // };
+        // assert_eq!(format!("{}", expr), "a.prop".to_string());
     }
 }

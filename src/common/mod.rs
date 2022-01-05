@@ -27,7 +27,7 @@ mod tests {
         let pattern_parts = vec![Box::new(CypherNode::PatternPart {
             var: None,
             pattern_element: Box::new(CypherNode::PatternElement {
-                parentheses: 0,
+                parenthesis: false,
                 pattern_element: (
                     Box::new(CypherNode::NodePattern {
                         var: None,
