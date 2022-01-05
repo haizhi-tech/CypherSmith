@@ -772,8 +772,8 @@ impl CypherNodeVisitor for CypherGenerator {
         }
 
         let (is_range, range) = if self.random.bool() {
-            // 
-            let range_start = if self.random.bool() { 
+            //
+            let range_start = if self.random.bool() {
                 Some(self.random.d2())
             } else {
                 None
@@ -790,7 +790,7 @@ impl CypherNodeVisitor for CypherGenerator {
                 } else {
                     None
                 };
-                
+
                 Some((is_range_end, range_end))
             } else {
                 None

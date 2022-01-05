@@ -1,6 +1,9 @@
 use super::cypher::{ConvertVisitor, CypherNode};
 
-use crate::common::{Expr, FieldValue, NodeLabel, Property, Variable, PropertyExpression, NameSpace, RelationshipDirection};
+use crate::common::{
+    Expr, FieldValue, NameSpace, NodeLabel, Property, PropertyExpression, RelationshipDirection,
+    Variable,
+};
 use crate::meta::Label;
 
 pub struct TransformVisitor {
@@ -216,37 +219,37 @@ impl ConvertVisitor for TransformVisitor {
         query_string
     }
 
-    /// ProjectionItems: *(,ProjectionItem)*|ProjectionItem+
+    /// ### ProjectionItems:
+    ///
+    /// *(,ProjectionItem)*|ProjectionItem+
     fn visit_projection_items(
         &mut self,
         is_all: bool,
-        expressions: Vec<(Expr, Option<crate::common::Variable>)>,
+        expressions: Vec<(Expr, Option<Variable>)>,
     ) -> Self::Output {
         let mut query_string = String::new();
 
+        // Expression AS Variable.
+        let expr_str = expressions
+            .into_iter()
+            .map(|(expr, var)| {
+                let mut x = expr.to_string();
+                if let Some(var) = var {
+                    x += " AS ";
+                    x += &var.get_name();
+                }
+                x
+            })
+            .collect::<Vec<_>>();
+
+        let expr_string = expr_str.join(",");
+
         if is_all {
             // is_all = true: *
-            query_string += "*";
-        } else {
-            // is_all = false: Expression AS Variable.
-            if expressions.is_empty() {
-                // todo: Return Error. Invalid syntax.
-            }
-            let (expr, var) = expressions[0].clone();
-            query_string += &expr.to_string();
-            if let Some(var) = var {
-                query_string += &var.get_name();
-            }
+            query_string += "*,";
         }
 
-        // Expression AS Variable.
-        for (expr, var) in expressions.into_iter().skip(1) {
-            query_string += &expr.to_string();
-            query_string += " AS ";
-            if let Some(var) = var {
-                query_string += &var.get_name();
-            }
-        }
+        query_string += &expr_string;
 
         query_string
     }
@@ -293,18 +296,13 @@ impl ConvertVisitor for TransformVisitor {
         if let Some(where_clause) = where_clause {
             query_string += " WHERE ";
             query_string += &where_clause.to_string();
-            
         }
 
         query_string
     }
 
     /// UNWIND: `UNWIND` expression AS variable.
-    fn visit_unwind(
-        &mut self,
-        expression: Expr,
-        variable: Variable,
-    ) -> Self::Output {
+    fn visit_unwind(&mut self, expression: Expr, variable: Variable) -> Self::Output {
         let mut unwind_string = "UNWIND ".to_string();
         unwind_string += &expression.to_string();
         unwind_string += " AS ";
@@ -338,7 +336,7 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// Merge Merge PatternPart (MergeAction)*
-    /// 
+    ///
     /// MergeAction: ON (Match|Create) Set
     fn visit_merge(
         &mut self,
@@ -360,7 +358,7 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### Delete
-    /// 
+    ///
     /// `Detach`? Delete (Expression)*
     fn visit_delete(&mut self, is_detach: bool, expressions: Vec<Expr>) -> Self::Output {
         let mut delete_string = if is_detach {
@@ -374,21 +372,19 @@ impl ConvertVisitor for TransformVisitor {
             unreachable!()
         }
 
-        let expr = expressions[0].clone();
-        delete_string += &expr.to_string();
-
-        for expr in expressions.into_iter().skip(1) {
-            delete_string += ",";
-            delete_string += &expr.to_string();
-        }
+        let exprs = expressions
+            .into_iter()
+            .map(|expr| expr.to_string())
+            .collect::<Vec<_>>();
+        delete_string += &exprs.join(",");
 
         delete_string
     }
 
-    /// ### Set: 
-    /// 
+    /// ### Set:
+    ///
     /// Set SetItem+
-    /// 
+    ///
     /// SetItem:  (Property = Expression | Variable = Expression | Variable += Expression | Variable = NodeLabels)
     fn visit_set(
         &mut self,
@@ -433,7 +429,11 @@ impl ConvertVisitor for TransformVisitor {
         });
 
         // collect string
-        let set_items = property_string.chain(variable_add_string).chain(variable_string).chain(label_string).collect::<Vec<String>>();
+        let set_items = property_string
+            .chain(variable_add_string)
+            .chain(variable_string)
+            .chain(label_string)
+            .collect::<Vec<String>>();
         let set_items_string = set_items.join(",");
         set_string += &set_items_string;
 
@@ -441,7 +441,7 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### ExplicitProcedureInvocation
-    /// 
+    ///
     /// SymbolicName.ProcedureName ( Expression* )
     fn visit_explicit_procedure_invocation(
         &mut self,
@@ -455,12 +455,11 @@ impl ConvertVisitor for TransformVisitor {
 
         query_string += "(";
         if !expressions.is_empty() {
-            query_string += &expressions[0].clone().to_string();
-
-            for expr in expressions.into_iter().skip(1) {
-                query_string += ",";
-                query_string += &expr.to_string();
-            }
+            let exprs = expressions
+                .into_iter()
+                .map(|expr| expr.to_string())
+                .collect::<Vec<_>>();
+            query_string += &exprs.join(",");
         }
         query_string += ")";
 
@@ -468,7 +467,7 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### ImplicitProcedureInvocation
-    /// 
+    ///
     /// SymbolicName.ProcedureName
     fn visit_implicit_procedure_invocation(
         &mut self,
@@ -482,9 +481,9 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### YieldItems
-    /// 
+    ///
     /// YieldItem (,YieldItem)* Where?
-    /// 
+    ///
     /// YieldItem: (ProcedureResultField AS)? Variable
     fn visit_yield_items(
         &mut self,
@@ -493,23 +492,20 @@ impl ConvertVisitor for TransformVisitor {
     ) -> Self::Output {
         let mut query_string = String::new();
 
-        // YieldItem
-        let (res, var) = yield_items[0].clone();
-        if let Some(res) = res {
-            query_string += &res.get_name();
-            query_string += " AS ";
-        }
-        query_string += &var.get_name();
+        let yield_string = yield_items
+            .into_iter()
+            .map(|(res, var)| {
+                let mut x = String::new();
+                if let Some(res) = res {
+                    x += &res.get_name();
+                    x += " AS ";
+                }
+                x += &var.get_name();
+                x
+            })
+            .collect::<Vec<_>>();
 
-        // YieldItem*
-        for (res, var) in yield_items.into_iter().skip(1) {
-            query_string += ",";
-            if let Some(res) = res {
-                query_string += &res.get_name();
-                query_string += " AS ";
-            }
-            query_string += &var.get_name();
-        }
+        query_string += &yield_string.join(",");
 
         // Where Clasue
         if let Some(where_clause) = where_clause {
@@ -521,9 +517,9 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// Remove
-    /// 
+    ///
     /// `REMOVE` RemoveItems+
-    /// 
+    ///
     /// RemoveItem: (Variable NodeLabels| PropertyExpression)
     fn visit_remove(
         &mut self,
@@ -531,41 +527,28 @@ impl ConvertVisitor for TransformVisitor {
         property_remove: Vec<PropertyExpression>,
     ) -> Self::Output {
         let mut remove_string = "REMOVE ".to_string();
-        
-        // The first element behaves differently from the following elements.
-        if variable_remove.is_empty() {
-            if property_remove.is_empty() {
-                unreachable!()
-            }
-            let property = property_remove[0].clone();
-            remove_string += &property.get_name();
 
-            for property in property_remove {
-                remove_string += ",";
-                remove_string += &property.get_name();
-            }
-        } else {
-            let (var, labels) = variable_remove[0].clone();
-            remove_string += &var.get_name();
-            for label in labels.into_iter() {
-                remove_string += ":";
-                remove_string += &label.get_name();
-            }
-
-            for (var, labels) in variable_remove.into_iter().skip(1) {
-                remove_string += ",";
-                remove_string += &var.get_name();
-                for label in labels.into_iter() {
-                    remove_string += ":";
-                    remove_string += &label.get_name();
-                }
-            }
-
-            for property in property_remove.into_iter() {
-                remove_string += ",";
-                remove_string += &property.get_name();
-            }
+        // remove items cannot be null.
+        if variable_remove.is_empty() && property_remove.is_empty() {
+            unreachable!()
         }
+
+        let variable = variable_remove.into_iter().map(|(var, labels)| {
+            let mut x = var.get_name();
+            for label in labels {
+                x += ":";
+                x += &label.get_name();
+            }
+            x
+        });
+
+        let property = property_remove
+            .into_iter()
+            .map(|property| property.get_name());
+
+        let res_chain = variable.chain(property).collect::<Vec<_>>();
+
+        remove_string += &res_chain.join(",");
 
         remove_string
     }
@@ -579,15 +562,12 @@ impl ConvertVisitor for TransformVisitor {
             unreachable!()
         }
 
-        let first_pattern = pattern_parts[0].clone();
-        query_string += &self.visit(first_pattern);
+        let pattern_string = pattern_parts
+            .into_iter()
+            .map(|pattern_node| self.visit(pattern_node))
+            .collect::<Vec<_>>();
 
-        // Pattern: Vec<PatternPart>, pattern_parts length >= 1
-        for pattern_part in pattern_parts.into_iter().skip(1) {
-            query_string += ",";
-            query_string += &self.visit(pattern_part);
-        }
-
+        query_string += &pattern_string.join(",");
         query_string
     }
 
@@ -655,7 +635,7 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### NodePattern
-    /// 
+    ///
     /// (Varibale? (:label)*, Properties)
     fn visit_node_pattern(
         &mut self,
@@ -686,8 +666,8 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### RelationShipPattern
-    /// 
-    /// 
+    ///
+    ///
     fn visit_relationship_pattern(
         &mut self,
         direction: RelationshipDirection,
@@ -707,15 +687,12 @@ impl ConvertVisitor for TransformVisitor {
         if edge_labels.is_empty() {
             unreachable!()
         }
-
-        let edge_label = edge_labels[0].clone();
+        let labels_string = edge_labels
+            .into_iter()
+            .map(|label| label.get_name())
+            .collect::<Vec<_>>();
         query_string += ":";
-        query_string += &edge_label.get_name();
-
-        for edge_label in edge_labels.into_iter().skip(1) {
-            query_string += "|:";
-            query_string += &edge_label.get_name();
-        }
+        query_string += &labels_string.join("|:");
 
         // *RangeStart..RangeEnd
         if is_range {
@@ -732,7 +709,6 @@ impl ConvertVisitor for TransformVisitor {
                     }
                 }
             }
-            
         }
 
         // Property
