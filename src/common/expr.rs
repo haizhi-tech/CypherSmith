@@ -3,6 +3,7 @@ use std::fmt::Display;
 use super::util::RESERVED_WORD;
 use super::{DataKind, Property, RandomGenerator, VariableManager};
 use crate::ast::{CypherNode, TransformVisitor};
+use crate::meta::Label;
 
 #[derive(Debug, Default, Clone)]
 pub struct Variable {
@@ -194,14 +195,39 @@ pub enum ExprKind {
     Case(Option<Box<Expr>>, Vec<CaseAlternative>, Option<Box<Expr>>),
     /// A property access (e.g. `a.age`),
     Property(Box<Expr>, Property),
+    /// Vertex Label.
+    Label(Box<Expr>, Label),
     /// A function invocation (e.g. `sin(a)`),
     Invocation(Box<Expr>, bool, Vec<Expr>),
+    /// FilterExpression: (e.g. a in [1,2] where a>1).
+    FilterExpression(Variable, Box<Expr>, Option<Box<Expr>>),
     /// A predicate function,
-    PredicateFunction(PredicateFunctionKind, Variable, Box<Expr>, Box<Expr>),
+    PredicateFunction(PredicateFunctionKind, Box<Expr>),
     /// A apoc expression,
     ApocExpression(String, Vec<Expr>),
     /// A Subquery expression,
-    SubQuery(SubQueryKind, Box<CypherNode>),
+    SubQuery(SubQueryKind, Box<CypherNode>, Option<Box<Expr>>),
+}
+
+impl ExprKind {
+    fn get_kind(&self) {
+        match *self {
+            ExprKind::BinOp(_, _, _) => todo!(),
+            ExprKind::UnOp(_, _) => todo!(),
+            ExprKind::Cmp(_, _) => todo!(),
+            ExprKind::Lit(_) => todo!(),
+            ExprKind::Variable(_) => todo!(),
+            ExprKind::PredicateVariable(_) => todo!(),
+            ExprKind::Case(_, _, _) => todo!(),
+            ExprKind::Property(_, _) => todo!(),
+            ExprKind::Label(_, _) => todo!(),
+            ExprKind::Invocation(_, _, _) => todo!(),
+            ExprKind::PredicateFunction(_, _) => todo!(),
+            ExprKind::ApocExpression(_, _) => todo!(),
+            ExprKind::SubQuery(_, _, _) => todo!(),
+            ExprKind::FilterExpression(_, _, _) => todo!(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -234,6 +260,8 @@ pub enum BinOpKind {
     StartsWith,
     /// The `ENDS WITH` operator
     EndsWith,
+    /// The `|` Operator
+    Pipe,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -308,6 +336,10 @@ impl Display for PredicateFunctionKind {
 pub enum SubQueryKind {
     /// The `Exists { Query }` function
     Exists,
+    /// RelationShipsPattern:
+    RelationShipsPattern,
+    /// PredicatePattern: (Variable=)? RelationShipsPattern Where?
+    PredicatePattern,
 }
 
 /// Case Alternative.
@@ -426,6 +458,7 @@ impl Display for Expr {
                 BinOpKind::Contains => f.write_fmt(format_args!("{} CONTAINS {}", lhs, rhs)),
                 BinOpKind::StartsWith => f.write_fmt(format_args!("{} STARTS WITH {}", lhs, rhs)),
                 BinOpKind::EndsWith => f.write_fmt(format_args!("{} ENDS WITH {}", lhs, rhs)),
+                BinOpKind::Pipe => todo!(),
             },
             ExprKind::UnOp(kind, expr) => match kind {
                 UnOpKind::Pos => f.write_fmt(format_args!("+{}", expr)),
@@ -473,7 +506,7 @@ impl Display for Expr {
                     &head_str, &middle_str, &tail_str
                 ))
             }
-            ExprKind::Property(expr, str) => f.write_fmt(format_args!("{}.{}", expr, str)),
+            ExprKind::Property(expr, prop) => f.write_fmt(format_args!("{}.{}", expr, prop)),
             ExprKind::Invocation(expr, _, params) => {
                 let params_str: String = params
                     .iter()
@@ -482,17 +515,30 @@ impl Display for Expr {
                     .join(", ");
                 f.write_fmt(format_args!("{}({})", expr, &params_str))
             }
-            ExprKind::PredicateFunction(kind, var, list, predicate) => f.write_fmt(format_args!(
-                "{}({} IN {} WHERE {})",
-                kind, var, list, predicate
-            )),
+            ExprKind::PredicateFunction(kind, var) => todo!(),
+            // f.write_fmt(format_args!(
+            //     "{}({} IN {} WHERE {})",
+            //     kind, var, list, predicate
+            // )),
             ExprKind::ApocExpression(_, _) => todo!(),
-            ExprKind::SubQuery(_, expr) => {
-                // `Exists {Query}`
+            ExprKind::SubQuery(kind, expr, where_clause) => {
                 let mut transformer = TransformVisitor::new();
                 let result = transformer.exec(expr.clone());
-                f.write_fmt(format_args!("EXISTS {{{}}}", result))
+
+                match kind {
+                    SubQueryKind::Exists => {
+                        // `Exists {Query}`
+                        f.write_fmt(format_args!("EXISTS {{{}}}", result))
+                    }
+                    SubQueryKind::RelationShipsPattern => {
+                        // RelationShipsPattern
+                        f.write_fmt(format_args!("{}", result))
+                    }
+                    SubQueryKind::PredicatePattern => todo!(),
+                }
             }
+            ExprKind::Label(_, _) => todo!(),
+            ExprKind::FilterExpression(_, _, _) => todo!(),
         }
     }
 }

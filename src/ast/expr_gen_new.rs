@@ -338,15 +338,41 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         query_expr
     }
 
-    /// PropertyOrLabelsExpression: Atom {PropertyLookup}* NodeLabel*
+    /// PropertyOrLabelsExpression
+    ///
+    /// Atom {PropertyLookup}* NodeLabel*
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
-        // Propertylet mut query_expr = self.visit_atom();
-        // if let ExprKind::Variable(var) = query_expr.kind {
-        todo!()
-        // }
+        // Property
+        let mut query_expr = self.visit_atom();
+
+        if self.random.bool() {
+            // PropertyLookup*
+            for _ in 0..self.random.under(3) {
+                if self.random.d12() == 1 {
+                    let property = self
+                        .cypher
+                        .graph_schema
+                        .random_vertex_property(&mut self.random);
+                    query_expr = Expr::from(ExprKind::Property(Box::new(query_expr), property));
+                }
+            }
+        } else if self.random.bool() {
+            //query_expr.kind == ExprKind::Variable { // type check
+            // Nodelabels
+            for _ in 0..self.random.under(3) {
+                if self.random.d12() == 1 {
+                    let node_label = self.cypher.graph_schema.rand_vertex_label(&mut self.random);
+                    query_expr = Expr::from(ExprKind::Label(Box::new(query_expr), node_label));
+                }
+            }
+        }
+
+        query_expr
     }
 
-    /// Atom: Literal | Parameter | Case Expression | COUNT (*)
+    /// Atom
+    ///
+    /// Literal | Parameter | Case Expression | COUNT (*)
     fn visit_atom(&mut self) -> Self::Output {
         let select_number = self.random.d20();
 
@@ -386,31 +412,80 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
             // COUNT (*)
             2 => Expr::from(ExprKind::Lit(Literal::String("COUNT (*)".to_string()))),
-            // ListComprehension
+            // ListComprehension: [FilterExpression (|Expression)? ]
             3 => {
-                todo!()
+                let var = self.cypher.variables.get_old_variable();
+                let in_expr = Box::new(self.visit());
+                let where_expr = if self.random.d12() == 1 {
+                    Some(Box::new(self.visit()))
+                } else {
+                    None
+                };
+
+                let mut filter_expr =
+                    Expr::from(ExprKind::FilterExpression(var, in_expr, where_expr));
+
+                if self.random.d20() == 1 {
+                    filter_expr = Expr::from(ExprKind::BinOp(
+                        BinOpKind::Pipe,
+                        Box::new(filter_expr),
+                        Box::new(self.visit()),
+                    ));
+                }
+
+                Expr::from(ExprKind::Lit(Literal::List(vec![filter_expr])))
             }
-            // PatternComprehension
+            // PatternComprehension: [(variable =)? RelationShipsPattern (Where)? | Expression]
             4 => {
-                todo!()
+                let where_clause = if self.random.d20() == 1 {
+                    Some(Box::new(self.visit()))
+                } else {
+                    None
+                };
+
+                let lhs = Expr::from(ExprKind::SubQuery(
+                    SubQueryKind::PredicatePattern,
+                    Box::new(self.cypher.expr_pattern()),
+                    where_clause,
+                ));
+                let rhs = self.visit();
+
+                let list_expr = Expr::from(ExprKind::BinOp(
+                    BinOpKind::Pipe,
+                    Box::new(lhs),
+                    Box::new(rhs),
+                ));
+
+                Expr::from(ExprKind::Lit(Literal::List(vec![list_expr])))
             }
-            // ALL|ANY|NONE|SINGLE ( FilterExpression )
+            // ALL|ANY|NONE|SINGLE (FilterExpression)
             // FilterExpression: Variable IN Expression WhereExpression
             5 => {
                 let var = self.cypher.variables.get_old_variable();
-                let expression = self.visit();
-                let where_expression = self.visit();
+                let in_expr = Box::new(self.visit());
+                let where_expr = if self.random.d12() == 1 {
+                    Some(Box::new(self.visit()))
+                } else {
+                    None
+                };
+
+                let filter_expr = Expr::from(ExprKind::FilterExpression(var, in_expr, where_expr));
+
                 let kind = ExprKind::PredicateFunction(
                     self.random_predicate_function_kind(),
-                    var,
-                    Box::new(expression),
-                    Box::new(where_expression),
+                    Box::new(filter_expr),
                 );
+
                 Expr::from(kind)
             }
             // RelationShipsPattern
             6 => {
-                todo!()
+                let pattern_query = self.cypher.expr_relation_pattern();
+                Expr::from(ExprKind::SubQuery(
+                    SubQueryKind::RelationShipsPattern,
+                    Box::new(pattern_query),
+                    None,
+                ))
             }
             // ParenthesizedExpression
             7 => {
@@ -443,7 +518,11 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             9 => {
                 // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
                 let query = self.cypher.visit();
-                Expr::from(ExprKind::SubQuery(SubQueryKind::Exists, Box::new(query)))
+                Expr::from(ExprKind::SubQuery(
+                    SubQueryKind::Exists,
+                    Box::new(query),
+                    None,
+                ))
             }
             // Variable
             10 => {

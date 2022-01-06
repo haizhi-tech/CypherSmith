@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::Label;
-use crate::common::RandomGenerator;
+use crate::common::{Property, RandomGenerator};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphSchema {
@@ -11,6 +11,16 @@ pub struct GraphSchema {
     vertex_labels: Vec<Label>,
     // relationship labels
     edge_labels: Vec<Label>,
+}
+
+impl Default for GraphSchema {
+    fn default() -> Self {
+        GraphSchema {
+            name: "test".to_string(),
+            vertex_labels: vec![],
+            edge_labels: vec![],
+        }
+    }
 }
 
 impl GraphSchema {
@@ -37,7 +47,9 @@ impl GraphSchema {
     pub fn rand_vertex_label(&self, random: &mut RandomGenerator) -> Label {
         let length = self.vertex_labels.len();
         // todo: return error.
-        if length == 0 {}
+        if length == 0 {
+            unreachable!()
+        }
         let idx = random.under(length as _);
         self.vertex_labels[idx as usize].clone()
     }
@@ -46,15 +58,10 @@ impl GraphSchema {
         let idx = random.under(self.edge_labels.len() as _);
         self.edge_labels[idx as usize].clone()
     }
-}
 
-impl Default for GraphSchema {
-    fn default() -> Self {
-        GraphSchema {
-            name: "test".to_string(),
-            vertex_labels: vec![],
-            edge_labels: vec![],
-        }
+    pub fn random_vertex_property(&self, random: &mut RandomGenerator) -> Property {
+        let vertex_label = self.rand_vertex_label(random);
+        vertex_label.random_property(random)
     }
 }
 

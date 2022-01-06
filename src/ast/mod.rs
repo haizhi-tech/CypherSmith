@@ -34,14 +34,6 @@ mod tests {
         println!("{:?}", cypher_node);
     }
 
-    // #[test]
-    // fn expression_generator_test() {
-    //     let mut cypher_generator = CypherGenerator::new();
-    //     let mut x = ExprGenerator::new(&mut cypher_generator);
-    //     let ans = x.visit();
-    //     println!("{}", ans.get_name());
-    // }
-
     #[test]
     fn expression_generator_test() {
         let mut cypher_generator = CypherGenerator::new();
@@ -110,6 +102,7 @@ mod tests {
         let ans = expr_generator.visit();
         // println!("{}", ans.get_name());
         println!("{:?}", ans);
+        println!("{}", ans);
     }
 
     #[test]

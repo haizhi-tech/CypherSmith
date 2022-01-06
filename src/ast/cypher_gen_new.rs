@@ -49,6 +49,16 @@ impl CypherGenerator {
         "expression".to_string()
     }
 
+    /// Pattern: RelationShipsPattern
+    pub fn expr_relation_pattern(&mut self) -> CypherNode {
+        self.visit_pattern_element()
+    }
+
+    /// Pattern: (Variable=)? RelationshipsPattern
+    pub fn expr_pattern(&mut self) -> CypherNode {
+        self.visit_pattern_part()
+    }
+
     pub fn test_match_clause(&mut self) -> CypherNode {
         self.visit_match()
     }
