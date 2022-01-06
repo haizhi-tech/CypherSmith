@@ -230,7 +230,7 @@ impl ConvertVisitor for TransformVisitor {
         let mut query_string = String::new();
 
         // Expression AS Variable.
-        let expr_str = expressions
+        let expr_string = expressions
             .into_iter()
             .map(|(expr, var)| {
                 let mut x = expr.to_string();
@@ -240,9 +240,8 @@ impl ConvertVisitor for TransformVisitor {
                 }
                 x
             })
-            .collect::<Vec<_>>();
-
-        let expr_string = expr_str.join(",");
+            .collect::<Vec<_>>()
+            .join(",");
 
         if is_all {
             // is_all = true: *
@@ -375,8 +374,10 @@ impl ConvertVisitor for TransformVisitor {
         let exprs = expressions
             .into_iter()
             .map(|expr| expr.to_string())
-            .collect::<Vec<_>>();
-        delete_string += &exprs.join(",");
+            .collect::<Vec<_>>()
+            .join(",");
+
+        delete_string += &exprs;
 
         delete_string
     }
@@ -429,12 +430,13 @@ impl ConvertVisitor for TransformVisitor {
         });
 
         // collect string
-        let set_items = property_string
+        let set_items_string = property_string
             .chain(variable_add_string)
             .chain(variable_string)
             .chain(label_string)
-            .collect::<Vec<String>>();
-        let set_items_string = set_items.join(",");
+            .collect::<Vec<String>>()
+            .join(",");
+
         set_string += &set_items_string;
 
         set_string
@@ -458,8 +460,9 @@ impl ConvertVisitor for TransformVisitor {
             let exprs = expressions
                 .into_iter()
                 .map(|expr| expr.to_string())
-                .collect::<Vec<_>>();
-            query_string += &exprs.join(",");
+                .collect::<Vec<_>>()
+                .join(",");
+            query_string += &exprs;
         }
         query_string += ")";
 
@@ -503,9 +506,10 @@ impl ConvertVisitor for TransformVisitor {
                 x += &var.get_name();
                 x
             })
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
+            .join(",");
 
-        query_string += &yield_string.join(",");
+        query_string += &yield_string;
 
         // Where Clasue
         if let Some(where_clause) = where_clause {
@@ -546,9 +550,9 @@ impl ConvertVisitor for TransformVisitor {
             .into_iter()
             .map(|property| property.get_name());
 
-        let res_chain = variable.chain(property).collect::<Vec<_>>();
+        let res_chain = variable.chain(property).collect::<Vec<_>>().join(",");
 
-        remove_string += &res_chain.join(",");
+        remove_string += &res_chain;
 
         remove_string
     }
@@ -565,9 +569,10 @@ impl ConvertVisitor for TransformVisitor {
         let pattern_string = pattern_parts
             .into_iter()
             .map(|pattern_node| self.visit(pattern_node))
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
+            .join(",");
 
-        query_string += &pattern_string.join(",");
+        query_string += &pattern_string;
         query_string
     }
 
@@ -690,9 +695,10 @@ impl ConvertVisitor for TransformVisitor {
         let labels_string = edge_labels
             .into_iter()
             .map(|label| label.get_name())
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
+            .join("|:");
         query_string += ":";
-        query_string += &labels_string.join("|:");
+        query_string += &labels_string;
 
         // *RangeStart..RangeEnd
         if is_range {

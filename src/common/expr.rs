@@ -431,9 +431,9 @@ impl Display for Expr {
                 UnOpKind::Pos => f.write_fmt(format_args!("+{}", expr)),
                 UnOpKind::Neg => f.write_fmt(format_args!("-{}", expr)),
                 UnOpKind::Not => f.write_fmt(format_args!("NOT {}", expr)),
-                UnOpKind::Null => todo!(),
-                UnOpKind::NotNull => todo!(),
-                UnOpKind::Parentheses => todo!(),
+                UnOpKind::Null => f.write_fmt(format_args!("{} IS NULL", expr)),
+                UnOpKind::NotNull => f.write_fmt(format_args!("{} IS NOT NULL", expr)),
+                UnOpKind::Parentheses => f.write_fmt(format_args!("({})", expr)),
             },
             ExprKind::Cmp(cmp_expr, tails) => {
                 let tail_str: String = tails
@@ -537,35 +537,39 @@ mod tests {
         ];
 
         for (op, res) in ops.iter().zip(results.iter()) {
-            // let l_val = Expr {
-            //     kind: ExprKind::Variable("a".to_string()),
-            // };
-            // let r_val = Expr {
-
-            // };
-            // let expr = Expr {
-            //     kind: ExprKind::BinOp(*op, Box::new(l_val), Box::new(r_val)),
-            //     span: Span(0, 0),
-            // };
-            // assert_eq!(format!("{}", expr), res.to_string());
+            let l_val = Expr {
+                kind: ExprKind::Variable(Variable::new("a".to_string())),
+            };
+            let r_val = Expr {
+                kind: ExprKind::Variable(Variable::new("b".to_string())),
+            };
+            let expr = Expr {
+                kind: ExprKind::BinOp(*op, Box::new(l_val), Box::new(r_val)),
+            };
+            assert_eq!(format!("{}", expr), res.to_string());
         }
     }
 
     #[test]
     fn test_unop_display() {
-        let ops = vec![UnOpKind::Pos, UnOpKind::Neg, UnOpKind::Not];
-        let results = vec!["+a", "-a", "NOT a"];
+        let ops = vec![
+            UnOpKind::Pos,
+            UnOpKind::Neg,
+            UnOpKind::Not,
+            UnOpKind::Null,
+            UnOpKind::NotNull,
+            UnOpKind::Parentheses,
+        ];
+        let results = vec!["+a", "-a", "NOT a", "a IS NULL", "a IS NOT NULL", "(a)"];
 
         for (op, res) in ops.iter().zip(results.iter()) {
-            // let val = Expr {
-            //     kind: ExprKind::Variable("a".to_string()),
-            //     span: Span(0, 0),
-            // };
-            // let expr = Expr {
-            //     kind: ExprKind::UnOp(*op, Box::new(val)),
-            //     span: Span(0, 0),
-            // };
-            // assert_eq!(format!("{}", expr), res.to_string());
+            let val = Expr {
+                kind: ExprKind::Variable(Variable::new("a".to_string())),
+            };
+            let expr = Expr {
+                kind: ExprKind::UnOp(*op, Box::new(val)),
+            };
+            assert_eq!(format!("{}", expr), res.to_string());
         }
     }
 
@@ -577,7 +581,6 @@ mod tests {
         // };
         // let expr = Expr {
         //     kind: ExprKind::Property(Box::new(l_val), "prop".to_string()),
-        //     span: Span(0, 0),
         // };
         // assert_eq!(format!("{}", expr), "a.prop".to_string());
     }

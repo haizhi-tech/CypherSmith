@@ -305,48 +305,4 @@ impl LogVisitor for Log {
     ) -> Self::Output {
         (1, 1)
     }
-
-    // fn visit_property_or_labels_expression(
-    //     &mut self,
-    //     atom: Box<CypherNode>,
-    //     property_lookups: Vec<SchemaName>,
-    //     node_labels: Vec<NodeLabel>,
-    // ) -> Self::Output {
-    //     todo!()
-    // }
-
-    // fn visit_atom(
-    //     &mut self,
-    //     literal: Option<Literal>,
-    //     expressions: Vec<Expression>,
-    //     sub_expression: Option<Box<CypherNode>>,
-    //     is_variable: Option<Variable>,
-    // ) -> Self::Output {
-    //     todo!()
-    // }
-
-    // fn visit_filter_expression(
-    //     &mut self,
-    //     id_in_coll: (Variable, Expression),
-    //     where_clause: Option<Expression>,
-    // ) -> Self::Output {
-    //     todo!()
-    // }
-
-    // fn visit_relationships_pattern(
-    //     &mut self,
-    //     node_pattern: Box<CypherNode>,
-    //     pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
-    // ) -> Self::Output {
-    //     todo!()
-    // }
-
-    // fn visit_function_invocation(
-    //     &mut self,
-    //     is_exists: (bool, Option<(NameSpace, Variable)>),
-    //     is_distinct: bool,
-    //     expressions: Vec<Expression>,
-    // ) -> Self::Output {
-    //     todo!()
-    // }
 }
