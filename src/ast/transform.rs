@@ -54,7 +54,7 @@ impl ConvertVisitor for TransformVisitor {
         procedure: Box<CypherNode>,
         yield_items: (bool, Option<Box<CypherNode>>),
     ) -> Self::Output {
-        let mut query_string = "CALL".to_string();
+        let mut query_string = "CALL ".to_string();
         query_string += &self.visit(procedure);
 
         match yield_items.0 {
@@ -245,7 +245,10 @@ impl ConvertVisitor for TransformVisitor {
 
         if is_all {
             // is_all = true: *
-            query_string += "*,";
+            query_string += "*";
+            if !expr_string.is_empty() {
+                query_string += ",";
+            }
         }
 
         query_string += &expr_string;
@@ -392,7 +395,7 @@ impl ConvertVisitor for TransformVisitor {
         property_set: Vec<(PropertyExpression, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
-        label_set: Vec<(Variable, Vec<NodeLabel>)>,
+        label_set: Vec<(Variable, Vec<Label>)>,
     ) -> Self::Output {
         let mut set_string = "SET ".to_string();
 
@@ -527,7 +530,7 @@ impl ConvertVisitor for TransformVisitor {
     /// RemoveItem: (Variable NodeLabels| PropertyExpression)
     fn visit_remove(
         &mut self,
-        variable_remove: Vec<(Variable, Vec<NodeLabel>)>,
+        variable_remove: Vec<(Variable, Vec<Label>)>,
         property_remove: Vec<PropertyExpression>,
     ) -> Self::Output {
         let mut remove_string = "REMOVE ".to_string();
@@ -666,6 +669,7 @@ impl ConvertVisitor for TransformVisitor {
             query_string += &property_value.to_string();
             query_string += "}";
         }
+        query_string += ")";
 
         query_string
     }

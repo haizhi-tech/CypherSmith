@@ -1,17 +1,15 @@
 mod cypher;
 mod cypher_gen;
-mod cypher_gen_new;
 mod expr;
 mod expr_gen;
-mod expr_gen_new;
 mod transform;
 
 // pub use expr::{Variable};
 pub use cypher::{CypherNode, LogVisitor};
 // pub use cypher_gen::CypherGenerator;
-pub use cypher_gen_new::CypherGenerator;
+pub use cypher_gen::CypherGenerator;
 pub use expr::ExpressionNodeVisitor;
-pub use expr_gen_new::ExprGenerator;
+pub use expr_gen::ExprGenerator;
 pub use transform::TransformVisitor;
 
 mod constants {

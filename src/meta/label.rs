@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
 use crate::common::{LabelId, Property, RandomGenerator};
@@ -69,6 +71,12 @@ impl Label {
                 self.properties[idx as usize].clone()
             })
             .collect::<Vec<Property>>()
+    }
+}
+
+impl Display for Label {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label_name)
     }
 }
 

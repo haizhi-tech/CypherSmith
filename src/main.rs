@@ -21,18 +21,18 @@ fn main() {
 
     // generator the ast tree and string.
     let cypher_ast = driver.execute();
-    println!("CypherAST:\n{:?}", cypher_ast);
+    // println!("CypherAST:\n{:?}", cypher_ast.clone());
 
     // transform
-    // let cypher_string = driver.transfrom(Box::new(cypher_ast));
-    // println!("CypherString:\n{:?}", cypher_string);
+    let cypher_string = driver.transfrom(Box::new(cypher_ast));
+    println!("CypherString:\n{:?}", cypher_string);
 
     // query number add 1
     driver.add_query();
 
     // log_record recording intermediate information
-    let mut log_record = Log::new();
-    log_record.execute(Box::new(cypher_ast));
+    // let mut log_record = Log::new();
+    // log_record.execute(Box::new(cypher_ast));
 
-    log_record.report();
+    // log_record.report();
 }

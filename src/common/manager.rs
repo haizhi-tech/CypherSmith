@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum DataKind {
     // todo: more kind.
     Vertex,

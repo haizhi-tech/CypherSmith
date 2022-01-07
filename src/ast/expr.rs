@@ -52,9 +52,6 @@ expression_nodes_impl! {
     /// ComparsionExpression: AddOrSubtractExpression + Vec<PartialComparisonExpression>
     ComparisonExpression {},
 
-    /// PartialComparisonExpression: = <> < > <= >= AddOrSubtractExpression
-    PartialComparisonExpression {},
-
     /// AddOrSubtractExpression: MultiplyDivideModuloExpression (+/- MultiplyDivideModuloExpression)*
     AddOrSubtractExpression {},
 

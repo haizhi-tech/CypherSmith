@@ -1,6 +1,5 @@
 use crate::common::{
-    Expr, FieldValue, NameSpace, NodeLabel, Property, PropertyExpression, RelationshipDirection,
-    Variable,
+    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
 };
 use crate::meta::Label;
 
@@ -33,31 +32,6 @@ macro_rules! cypher_nodes_impl {
                     self.visit_query()
                 }
             }
-
-            // pub trait ConvertVisitor {
-            //     type Output;
-
-            //     $(
-            //         fn [<visit_ $name:snake>](&self $(, $param: $type)* ) -> Self::Output;
-            //     )*
-
-
-            //     // fn visit(&mut self, node: &CypherNode) -> Self::Output {
-            //     //     match node {
-            //     //         $(
-            //     //             CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
-            //     //         )*
-            //     //     }
-            //     // }
-
-            //     fn visit(&mut self, node: &CypherNode) -> Self::Output {
-            //         match node {
-            //             $(
-            //                 CypherNode::$name { $( $param ,)* } => self.[<visit_ $name:snake>]($($param),*),
-            //             )*
-            //         }
-            //     }
-            // }
 
             /// The visitor trait for `CypherNode`.
             ///
@@ -113,17 +87,10 @@ macro_rules! cypher_nodes_impl {
         }
     };
 
-    // ( FORMAT($formatter: ident) $param:ident : Box<CypherNode> ) => {
-    //     // do not recursively format subplan
-    // };
     ( FORMAT($formatter: ident) $param:ident : $type:ty ) => {
         $formatter.field(stringify!($param), $param);
     };
 
-    // ( $(
-    //     $(#[doc = $variant_doc:expr])*
-    //     $name:ident { $( $(#[doc = $param_doc:expr])* $param:ident : $type:ty, )* },
-    // )* )
 }
 
 cypher_nodes_impl! {
@@ -260,7 +227,7 @@ cypher_nodes_impl! {
         property_set: Vec<(PropertyExpression, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
-        label_set: Vec<(Variable, Vec<NodeLabel>)>,
+        label_set: Vec<(Variable, Vec<Label>)>,
     },
 
     /// ExplicitProcedureInvocation
@@ -285,7 +252,7 @@ cypher_nodes_impl! {
 
     /// Remove
     Remove {
-        variable_remove: Vec<(Variable, Vec<NodeLabel>)>,
+        variable_remove: Vec<(Variable, Vec<Label>)>,
         property_remove: Vec<PropertyExpression>,
     },
 
@@ -330,44 +297,6 @@ cypher_nodes_impl! {
         properties: Option<(Property, FieldValue)>,
     },
 
-    // /// Expression relation.
-    // ///
-    // /// PropertyOrLabelsExpression: Atom (PropertyLookUp)* NodeLabels? (=NodeLabel*)
-    // PropertyOrLabelsExpression {
-    //     atom: Box<CypherNode>,
-    //     property_lookups: Vec<SchemaName>,
-    //     node_labels: Vec<NodeLabel>,
-    // },
-
-    // /// Atom
-    // ///
-    // Atom {
-    //     literal: Option<Literal>,
-    //     expressions: Vec<Expression>,
-    //     sub_expression: Option<Box<CypherNode>>,
-    //     is_variable: Option<Variable>,
-    // },
-
-    // /// FilterExpression:
-    // ///
-    // FilterExpression {
-    //     id_in_coll: (Variable, Expression),
-    //     where_clause: Option<Expression>,
-    // },
-
-    // /// RelationshipsPattern
-    // ///
-    // RelationshipsPattern {
-    //     node_pattern: Box<CypherNode>,
-    //     pattern_element_chain: Vec<(Box<CypherNode>, Box<CypherNode>)>,
-    // },
-
-    // /// FunctionInvocation
-    // FunctionInvocation {
-    //     is_exists: (bool, Option<(NameSpace, Variable)>),
-    //     is_distinct: bool,
-    //     expressions: Vec<Expression>,
-    // },
 }
 
 impl From<Box<CypherNode>> for CypherNode {

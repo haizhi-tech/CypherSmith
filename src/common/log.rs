@@ -1,10 +1,12 @@
 use std::{cmp, error::Error};
 
 use super::{
-    Expr, FieldValue, Literal, NameSpace, NodeLabel, Property, PropertyExpression,
-    RelationshipDirection, SchemaName, Variable,
+    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
 };
-use crate::ast::{CypherNode, LogVisitor};
+use crate::{
+    ast::{CypherNode, LogVisitor},
+    meta::Label,
+};
 
 #[derive(Default)]
 pub struct Log {
@@ -214,7 +216,7 @@ impl LogVisitor for Log {
         property_set: Vec<(PropertyExpression, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
-        label_set: Vec<(Variable, Vec<NodeLabel>)>,
+        label_set: Vec<(Variable, Vec<Label>)>,
     ) -> Self::Output {
         todo!()
     }
@@ -244,7 +246,7 @@ impl LogVisitor for Log {
 
     fn visit_remove(
         &mut self,
-        variable_remove: Vec<(Variable, Vec<NodeLabel>)>,
+        variable_remove: Vec<(Variable, Vec<Label>)>,
         property_remove: Vec<PropertyExpression>,
     ) -> Self::Output {
         todo!()

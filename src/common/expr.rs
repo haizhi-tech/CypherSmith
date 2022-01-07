@@ -8,15 +8,29 @@ use crate::meta::Label;
 #[derive(Debug, Default, Clone)]
 pub struct Variable {
     name: String,
+    kind: DataKind,
 }
 
 impl Variable {
     pub fn new(name: String) -> Self {
-        Variable { name }
+        Variable {
+            name,
+            kind: DataKind::default(),
+        }
     }
 
+    pub fn new_var(name: String, kind: DataKind) -> Self {
+        Variable { name, kind }
+    }
+}
+
+impl Variable {
     pub fn get_name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn get_kind(&self) -> DataKind {
+        self.kind.clone()
     }
 }
 
@@ -49,13 +63,14 @@ impl VariableGenerator {
     }
 
     pub fn new_variable(&mut self) -> Variable {
+        let var = Variable::new(self.name.clone() + &self.number.to_string());
         self.number += 1u32;
-        Variable::new(self.name.clone() + &self.number.to_string())
+        var
     }
 
     pub fn get_old_variable(&mut self) -> Variable {
         let mut random = RandomGenerator::new();
-        let old_number = random.d100() % (self.number as i32);
+        let old_number = random.d100() % ((self.number + 1) as i32);
         Variable::new(self.name.clone() + &old_number.to_string())
     }
 
@@ -203,27 +218,24 @@ pub enum ExprKind {
     FilterExpression(Variable, Box<Expr>, Option<Box<Expr>>),
     /// A predicate function,
     PredicateFunction(PredicateFunctionKind, Box<Expr>),
-    /// A apoc expression,
-    ApocExpression(String, Vec<Expr>),
     /// A Subquery expression,
     SubQuery(SubQueryKind, Box<CypherNode>, Option<Box<Expr>>),
 }
 
 impl ExprKind {
-    fn get_kind(&self) {
-        match *self {
+    pub fn get_kind(&self) -> DataKind {
+        match self {
             ExprKind::BinOp(_, _, _) => todo!(),
             ExprKind::UnOp(_, _) => todo!(),
             ExprKind::Cmp(_, _) => todo!(),
             ExprKind::Lit(_) => todo!(),
-            ExprKind::Variable(_) => todo!(),
+            ExprKind::Variable(var) => var.get_kind(),
             ExprKind::PredicateVariable(_) => todo!(),
             ExprKind::Case(_, _, _) => todo!(),
             ExprKind::Property(_, _) => todo!(),
             ExprKind::Label(_, _) => todo!(),
             ExprKind::Invocation(_, _, _) => todo!(),
             ExprKind::PredicateFunction(_, _) => todo!(),
-            ExprKind::ApocExpression(_, _) => todo!(),
             ExprKind::SubQuery(_, _, _) => todo!(),
             ExprKind::FilterExpression(_, _, _) => todo!(),
         }
@@ -458,7 +470,7 @@ impl Display for Expr {
                 BinOpKind::Contains => f.write_fmt(format_args!("{} CONTAINS {}", lhs, rhs)),
                 BinOpKind::StartsWith => f.write_fmt(format_args!("{} STARTS WITH {}", lhs, rhs)),
                 BinOpKind::EndsWith => f.write_fmt(format_args!("{} ENDS WITH {}", lhs, rhs)),
-                BinOpKind::Pipe => todo!(),
+                BinOpKind::Pipe => f.write_fmt(format_args!("{} | {}", lhs, rhs)),
             },
             ExprKind::UnOp(kind, expr) => match kind {
                 UnOpKind::Pos => f.write_fmt(format_args!("+{}", expr)),
@@ -515,12 +527,9 @@ impl Display for Expr {
                     .join(", ");
                 f.write_fmt(format_args!("{}({})", expr, &params_str))
             }
-            ExprKind::PredicateFunction(kind, var) => todo!(),
-            // f.write_fmt(format_args!(
-            //     "{}({} IN {} WHERE {})",
-            //     kind, var, list, predicate
-            // )),
-            ExprKind::ApocExpression(_, _) => todo!(),
+            ExprKind::PredicateFunction(kind, expr) => {
+                f.write_fmt(format_args!("{}({})", kind, expr))
+            }
             ExprKind::SubQuery(kind, expr, where_clause) => {
                 let mut transformer = TransformVisitor::new();
                 let result = transformer.exec(expr.clone());
@@ -534,11 +543,23 @@ impl Display for Expr {
                         // RelationShipsPattern
                         f.write_fmt(format_args!("{}", result))
                     }
-                    SubQueryKind::PredicatePattern => todo!(),
+                    SubQueryKind::PredicatePattern => {
+                        if let Some(where_clause) = where_clause {
+                            f.write_fmt(format_args!("{} WHERE {}", result, where_clause))
+                        } else {
+                            f.write_fmt(format_args!("{}", result))
+                        }
+                    }
                 }
             }
-            ExprKind::Label(_, _) => todo!(),
-            ExprKind::FilterExpression(_, _, _) => todo!(),
+            ExprKind::Label(expr, label) => f.write_fmt(format_args!("{}:{}", expr, label)),
+            ExprKind::FilterExpression(var, in_expr, where_expr) => {
+                if let Some(where_expr) = where_expr {
+                    f.write_fmt(format_args!("{} IN {} WHERE {}", var, in_expr, where_expr))
+                } else {
+                    f.write_fmt(format_args!("{} IN {}", var, in_expr))
+                }
+            }
         }
     }
 }
