@@ -9,6 +9,7 @@ pub enum DataKind {
     Boolean,
     Integer,
     String,
+    Pipe,
     Null,
 }
 

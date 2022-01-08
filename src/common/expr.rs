@@ -225,12 +225,33 @@ pub enum ExprKind {
 impl ExprKind {
     pub fn get_kind(&self) -> DataKind {
         match self {
-            ExprKind::BinOp(_, _, _) => todo!(),
-            ExprKind::UnOp(_, _) => todo!(),
-            ExprKind::Cmp(_, _) => todo!(),
+            ExprKind::BinOp(kind, expr, _) => match kind {
+                BinOpKind::Add
+                | BinOpKind::Sub
+                | BinOpKind::Mul
+                | BinOpKind::Div
+                | BinOpKind::Mod
+                | BinOpKind::Pow => expr.kind.get_kind(),
+                BinOpKind::Or
+                | BinOpKind::Xor
+                | BinOpKind::And
+                | BinOpKind::Contains
+                | BinOpKind::StartsWith
+                | BinOpKind::EndsWith
+                | BinOpKind::In => DataKind::Boolean,
+                BinOpKind::Index => todo!(),
+                BinOpKind::Pipe => DataKind::Pipe,
+            },
+            ExprKind::UnOp(kind, expr) => match kind {
+                UnOpKind::Pos | UnOpKind::Neg => expr.kind.get_kind(),
+                UnOpKind::Not => DataKind::Boolean,
+                UnOpKind::Null | UnOpKind::NotNull => DataKind::Boolean,
+                UnOpKind::Parentheses => expr.kind.get_kind(),
+            },
+            ExprKind::Cmp(_, _) => DataKind::Boolean,
             ExprKind::Lit(_) => todo!(),
             ExprKind::Variable(var) => var.get_kind(),
-            ExprKind::PredicateVariable(_) => todo!(),
+            ExprKind::PredicateVariable(var) => var.get_kind(),
             ExprKind::Case(_, _, _) => todo!(),
             ExprKind::Property(_, _) => todo!(),
             ExprKind::Label(_, _) => todo!(),
@@ -640,15 +661,15 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_property_display() {
-        // let l_val = Expr {
-        //     kind: ExprKind::Variable("a".to_string()),
-        //     span: Span(0, 0),
-        // };
-        // let expr = Expr {
-        //     kind: ExprKind::Property(Box::new(l_val), "prop".to_string()),
-        // };
-        // assert_eq!(format!("{}", expr), "a.prop".to_string());
-    }
+    // #[test]
+    // fn test_property_display() {
+    // let l_val = Expr {
+    //     kind: ExprKind::Variable("a".to_string()),
+    //     span: Span(0, 0),
+    // };
+    // let expr = Expr {
+    //     kind: ExprKind::Property(Box::new(l_val), "prop".to_string()),
+    // };
+    // assert_eq!(format!("{}", expr), "a.prop".to_string());
+    // }
 }

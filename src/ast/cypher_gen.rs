@@ -39,6 +39,12 @@ impl CypherGenerator {
 }
 
 impl CypherGenerator {
+    // exec:
+    pub fn exec(&mut self) -> CypherNode {
+        self.variables = VariableGenerator::new();
+        self.visit_query()
+    }
+
     pub fn visit(&mut self) -> CypherNode {
         // init the limit parameter each new cypher.
         self.limit = constants::DEFAULT_QUERY_LIMIT;
@@ -106,6 +112,7 @@ impl CypherNodeVisitor for CypherGenerator {
         }
     }
 
+    // StandaloneCall: CALL (ExplictProcedureInvocation | ImplicitProcedureInvocation) (YIELD *|YieldItems)?
     fn visit_standalone_call(&mut self) -> Self::Output {
         let procedure_node = if self.random.bool() {
             self.visit_explicit_procedure_invocation()

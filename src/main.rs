@@ -21,11 +21,11 @@ fn main() {
 
     // generator the ast tree and string.
     let cypher_ast = driver.execute();
-    // println!("CypherAST:\n{:?}", cypher_ast.clone());
+    println!("CypherAST:\n{:?}", cypher_ast);
 
     // transform
-    let cypher_string = driver.transfrom(Box::new(cypher_ast));
-    println!("CypherString:\n{:?}", cypher_string);
+    let cypher_string = driver.transfrom(Box::new(cypher_ast.clone()));
+    println!("CypherString:\n{}", cypher_string);
 
     // query number add 1
     driver.add_query();

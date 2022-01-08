@@ -1,4 +1,4 @@
-use std::{cmp, error::Error};
+use std::cmp;
 
 use super::{
     Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct Log {
-    queries: u32,
+    // queries: u32,
     sum_height: u32,
     sum_nodes: u32,
 }
@@ -18,7 +18,7 @@ pub struct Log {
 impl Log {
     pub fn new() -> Self {
         Log {
-            queries: 0,
+            // queries: 0,
             sum_height: 0,
             sum_nodes: 0,
         }
@@ -39,7 +39,7 @@ impl Log {
     // report current cyphersmith condition.
     pub fn report(&self) {
         println!(
-            "AST tree information:\n SUM_NODES: {},\n height: {}",
+            "AST tree information:\nSUM_NODES: {},\nheight: {}",
             self.sum_nodes, self.sum_height
         );
     }
@@ -55,6 +55,17 @@ impl Log {
             *sum_nodes += nodes;
             *max_level = cmp::max(height, *max_level)
         }
+    }
+
+    fn get_single_info(
+        &mut self,
+        cypher_node: Box<CypherNode>,
+        sum_nodes: &mut u32,
+        max_level: &mut u32,
+    ) {
+        let (nodes, height) = self.visit(cypher_node);
+        *sum_nodes += nodes;
+        *max_level = cmp::max(height, *max_level)
     }
 }
 
@@ -83,7 +94,14 @@ impl LogVisitor for Log {
         procedure: Box<CypherNode>,
         yield_items: (bool, Option<Box<CypherNode>>),
     ) -> Self::Output {
-        todo!()
+        let (mut call_nodes, mut call_height) = self.visit(procedure);
+        if let Some(yield_items) = yield_items.1 {
+            let (yield_nodes, yield_height) = self.visit(yield_items);
+            call_height = cmp::max(call_height, yield_height);
+            call_nodes += yield_nodes;
+        }
+
+        (call_nodes + 1, call_height + 1)
     }
 
     fn visit_single_query(&mut self, part_query: Box<CypherNode>) -> Self::Output {
@@ -123,7 +141,17 @@ impl LogVisitor for Log {
         multi_part: Vec<(Vec<Box<CypherNode>>, Vec<Box<CypherNode>>, Box<CypherNode>)>,
         single_part: Box<CypherNode>,
     ) -> Self::Output {
-        todo!()
+        let (mut multi_nodes, mut multi_height) = (0, 0);
+
+        for (reading_clause, updating_clause, with_clause) in multi_part.into_iter() {
+            self.get_info(reading_clause, &mut multi_nodes, &mut multi_height);
+            self.get_info(updating_clause, &mut multi_nodes, &mut multi_height);
+            self.get_single_info(with_clause, &mut multi_nodes, &mut multi_height);
+        }
+
+        self.get_single_info(single_part, &mut multi_nodes, &mut multi_height);
+
+        (multi_nodes + 1, multi_height + 1)
     }
 
     fn visit_with(

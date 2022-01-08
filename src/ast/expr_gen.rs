@@ -344,6 +344,12 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         // Property
         let mut query_expr = self.visit_atom();
 
+        let data_kind = query_expr.kind.get_kind();
+
+        if data_kind != DataKind::Vertex {
+            return query_expr;
+        }
+
         if (self.complexity < self.limit) && self.random.bool() {
             // PropertyLookup*
             for _ in 0..self.random.under(3) {
@@ -357,6 +363,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
         } else if (self.complexity < self.limit) && self.random.bool() {
             //query_expr.kind == ExprKind::Variable { // type check
+
             // Nodelabels
             for _ in 0..self.random.under(3) {
                 if self.random.d12() == 1 {
@@ -525,7 +532,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 self.complexity += 1;
 
                 // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
-                let query = self.cypher.visit();
+                let query = self.cypher.exec();
                 Expr::from(ExprKind::SubQuery(
                     SubQueryKind::Exists,
                     Box::new(query),

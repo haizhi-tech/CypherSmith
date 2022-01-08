@@ -22,8 +22,6 @@ impl Driver {
 
     // ast tree construct
     pub fn execute(&self) -> CypherNode {
-        // let transform = TransformVisitor::new();
-        // let mut ast_generator = CypherGenerator::new();
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
         ast_generator.visit()
         // ast_generator.test_match_clause()
