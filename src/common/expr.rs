@@ -150,47 +150,47 @@ impl PropertyExpression {
     }
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct NodeLabel {
-    label_name: String,
-}
+// #[derive(Debug, Default, Clone)]
+// pub struct NodeLabel {
+//     label_name: String,
+// }
 
-// todo: need to implementation get old nodelabel.
-impl NodeLabel {
-    pub fn new() -> Self {
-        NodeLabel {
-            label_name: "NodeLabel(WIP)".to_string(),
-        }
-    }
+// // todo: need to implementation get old nodelabel.
+// impl NodeLabel {
+//     pub fn new() -> Self {
+//         NodeLabel {
+//             label_name: "NodeLabel(WIP)".to_string(),
+//         }
+//     }
 
-    pub fn get_name(&self) -> String {
-        self.label_name.clone()
-    }
-}
+//     pub fn get_name(&self) -> String {
+//         self.label_name.clone()
+//     }
+// }
 
-#[derive(Debug, Default)]
-pub struct SchemaName {
-    label_name: String,
-}
+// #[derive(Debug, Default)]
+// pub struct SchemaName {
+//     label_name: String,
+// }
 
-impl SchemaName {
-    // todo: need to modify, SchemaName not correct.
-    pub fn new(random: &mut RandomGenerator) -> Self {
-        let label_name = if random.d12() < 6 {
-            // Variable name
-            NodeLabel::new().get_name()
-        } else {
-            // label_name == ReserverdWord
-            let index = random.under(48);
-            RESERVED_WORD[index as usize].to_string()
-        };
-        SchemaName { label_name }
-    }
+// impl SchemaName {
+//     // todo: need to modify, SchemaName not correct.
+//     pub fn new(random: &mut RandomGenerator) -> Self {
+//         let label_name = if random.d12() < 6 {
+//             // Variable name
+//             NodeLabel::new().get_name()
+//         } else {
+//             // label_name == ReserverdWord
+//             let index = random.under(48);
+//             RESERVED_WORD[index as usize].to_string()
+//         };
+//         SchemaName { label_name }
+//     }
 
-    pub fn get_name(&self) -> String {
-        self.label_name.clone()
-    }
-}
+//     pub fn get_name(&self) -> String {
+//         self.label_name.clone()
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub enum ExprKind {

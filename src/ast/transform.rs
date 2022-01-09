@@ -1,8 +1,7 @@
 use super::cypher::{ConvertVisitor, CypherNode};
 
 use crate::common::{
-    Expr, FieldValue, NameSpace, NodeLabel, Property, PropertyExpression, RelationshipDirection,
-    Variable,
+    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
 };
 use crate::meta::Label;
 

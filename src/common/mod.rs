@@ -18,7 +18,7 @@ pub use util::*;
 
 #[cfg(test)]
 mod tests {
-    use super::{Log, RandomGenerator, SchemaName, VariableGenerator};
+    use super::{Log, RandomGenerator, VariableGenerator};
     use crate::ast::{CypherNode, LogVisitor};
 
     #[test]
@@ -78,10 +78,10 @@ mod tests {
         println!("{:?}", var);
     }
 
-    #[test]
-    fn test_schema_name() {
-        let mut random_gen = RandomGenerator::new();
-        let new_schema_name = SchemaName::new(&mut random_gen);
-        println!("{:?}", new_schema_name);
-    }
+    // #[test]
+    // fn test_schema_name() {
+    //     let mut random_gen = RandomGenerator::new();
+    //     let new_schema_name = SchemaName::new(&mut random_gen);
+    //     println!("{:?}", new_schema_name);
+    // }
 }

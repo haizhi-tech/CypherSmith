@@ -57,6 +57,16 @@ impl Log {
         }
     }
 
+    fn get_expr_info(
+        &mut self,
+        // _expr: Expr,
+        sum_nodes: &mut u32,
+        max_level: &mut u32,
+    ) {
+        *sum_nodes += 1;
+        *max_level += cmp::max(1, *max_level);
+    }
+
     fn get_single_info(
         &mut self,
         cypher_node: Box<CypherNode>,
@@ -159,15 +169,29 @@ impl LogVisitor for Log {
         projection_body: Box<CypherNode>,
         where_clause: Option<Expr>,
     ) -> Self::Output {
-        todo!()
+        let (mut with_nodes, mut with_height) = (0, 0);
+
+        // process projection_body nodes
+        self.get_single_info(projection_body, &mut with_nodes, &mut with_height);
+
+        // todo: expr process.
+        if where_clause.is_some() {}
+
+        (with_nodes + 1, with_height + 1)
     }
 
     fn visit_union(&mut self, union_all: Option<(bool, Box<CypherNode>)>) -> Self::Output {
-        todo!()
+        let (mut union_nodes, mut union_height) = (0, 0);
+
+        if let Some((_, union_all_node)) = union_all {
+            self.get_single_info(union_all_node, &mut union_nodes, &mut union_height);
+        }
+
+        (union_nodes, union_height)
     }
 
     fn visit_reading_clause(&mut self, reading_clause: Box<CypherNode>) -> Self::Output {
-        todo!()
+        self.visit(reading_clause)
     }
 
     fn visit_updating_clause(&mut self, updating_clause: Box<CypherNode>) -> Self::Output {
@@ -175,30 +199,46 @@ impl LogVisitor for Log {
     }
 
     fn visit_return(&mut self, projection_body: Box<CypherNode>) -> Self::Output {
-        todo!()
+        self.visit(projection_body)
     }
 
     fn visit_projection_body(
         &mut self,
-        is_distinct: bool,
+        _is_distinct: bool,
         projection_items: Box<CypherNode>,
         order: Option<Box<CypherNode>>,
         skip: Option<Expr>,
         limit: Option<Expr>,
     ) -> Self::Output {
-        todo!()
+        let (mut nodes, mut height) = (0, 0);
+
+        self.get_single_info(projection_items, &mut nodes, &mut height);
+
+        if let Some(order_node) = order {
+            self.get_single_info(order_node, &mut nodes, &mut height);
+        }
+
+        if skip.is_some() {
+            self.get_expr_info(&mut nodes, &mut height);
+        }
+
+        if limit.is_some() {
+            self.get_expr_info(&mut nodes, &mut height);
+        }
+
+        (nodes, height)
     }
 
     fn visit_projection_items(
         &mut self,
-        is_all: bool,
+        _is_all: bool,
         expressions: Vec<(Expr, Option<Variable>)>,
     ) -> Self::Output {
-        todo!()
+        (expressions.len() as u32, 1)
     }
 
     fn visit_order(&mut self, sort_items: Vec<(Expr, Option<String>)>) -> Self::Output {
-        todo!()
+        (sort_items.len() as u32, 1)
     }
 
     fn visit_match(
@@ -207,12 +247,18 @@ impl LogVisitor for Log {
         pattern: Box<CypherNode>,
         where_clause: Option<Expr>,
     ) -> Self::Output {
-        let (pattern_nodes, pattern_height) = self.visit(pattern);
+        let (mut pattern_nodes, pattern_height) = self.visit(pattern);
+
+        // where clause.
+        if where_clause.is_some() {
+            pattern_nodes += 1;
+        }
+
         (pattern_nodes + 1, pattern_height + 1)
     }
 
-    fn visit_unwind(&mut self, expression: Expr, variable: Variable) -> Self::Output {
-        todo!()
+    fn visit_unwind(&mut self, _expression: Expr, _variable: Variable) -> Self::Output {
+        (1, 1)
     }
 
     fn visit_in_query_call(
@@ -220,11 +266,17 @@ impl LogVisitor for Log {
         explicit_proceduce_invocation: Box<CypherNode>,
         yield_items: Option<Box<CypherNode>>,
     ) -> Self::Output {
-        todo!()
+        let (mut call_nodes, mut call_height) = self.visit(explicit_proceduce_invocation);
+
+        if let Some(yield_items) = yield_items {
+            self.get_single_info(yield_items, &mut call_nodes, &mut call_height);
+        }
+
+        (call_nodes + 1, call_height)
     }
 
     fn visit_create(&mut self, pattern: Box<CypherNode>) -> Self::Output {
-        todo!()
+        self.visit(pattern)
     }
 
     fn visit_merge(
@@ -232,11 +284,16 @@ impl LogVisitor for Log {
         pattern_part: Box<CypherNode>,
         merge_actions: Vec<(String, Box<CypherNode>)>,
     ) -> Self::Output {
-        todo!()
+        let (mut merge_nodes, mut merge_height) = self.visit(pattern_part);
+
+        let merge_action_nodes = merge_actions.into_iter().map(|x| x.1).collect::<Vec<_>>();
+        self.get_info(merge_action_nodes, &mut merge_nodes, &mut merge_height);
+
+        (merge_nodes, merge_height)
     }
 
-    fn visit_delete(&mut self, is_detach: bool, expressions: Vec<Expr>) -> Self::Output {
-        todo!()
+    fn visit_delete(&mut self, _is_detach: bool, expressions: Vec<Expr>) -> Self::Output {
+        (expressions.len() as u32, 1)
     }
 
     fn visit_set(
@@ -246,22 +303,24 @@ impl LogVisitor for Log {
         variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<Label>)>,
     ) -> Self::Output {
-        todo!()
+        let sum_nodes =
+            property_set.len() + variable_set.len() + variable_add.len() + label_set.len();
+        (sum_nodes as u32, 1)
     }
 
     fn visit_explicit_procedure_invocation(
         &mut self,
-        procedure_name: (NameSpace, Variable),
+        _procedure_name: (NameSpace, Variable),
         expressions: Vec<Expr>,
     ) -> Self::Output {
-        todo!()
+        (expressions.len() as u32, 1)
     }
 
     fn visit_implicit_procedure_invocation(
         &mut self,
-        procedure_name: (NameSpace, Variable),
+        _procedure_name: (NameSpace, Variable),
     ) -> Self::Output {
-        todo!()
+        (1, 1)
     }
 
     fn visit_yield_items(
@@ -269,7 +328,13 @@ impl LogVisitor for Log {
         yield_items: Vec<(Option<Variable>, Variable)>,
         where_clause: Option<Expr>,
     ) -> Self::Output {
-        todo!()
+        let mut yield_items_nodes = yield_items.len();
+
+        if where_clause.is_some() {
+            yield_items_nodes += 1;
+        }
+
+        (yield_items_nodes as u32, 1)
     }
 
     fn visit_remove(
@@ -277,7 +342,8 @@ impl LogVisitor for Log {
         variable_remove: Vec<(Variable, Vec<Label>)>,
         property_remove: Vec<PropertyExpression>,
     ) -> Self::Output {
-        todo!()
+        let sum_nodes = variable_remove.len() + property_remove.len();
+        (sum_nodes as u32, 1)
     }
 
     fn visit_pattern(&mut self, pattern_parts: Vec<Box<CypherNode>>) -> Self::Output {
@@ -326,12 +392,12 @@ impl LogVisitor for Log {
 
     fn visit_relationship_pattern(
         &mut self,
-        direction: RelationshipDirection,
-        var: Option<Variable>,
-        edge_labels: Vec<crate::meta::Label>,
-        is_range: bool,
-        range: (Option<i32>, Option<(bool, Option<i32>)>),
-        properties: Option<(Property, FieldValue)>,
+        _direction: RelationshipDirection,
+        _var: Option<Variable>,
+        _edge_labels: Vec<crate::meta::Label>,
+        _is_range: bool,
+        _range: (Option<i32>, Option<(bool, Option<i32>)>),
+        _properties: Option<(Property, FieldValue)>,
     ) -> Self::Output {
         (1, 1)
     }
