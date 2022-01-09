@@ -104,33 +104,33 @@ impl NameSpace {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct Expression {
-    name: String,
-    kind: DataKind,
-}
+// #[derive(Debug, Default)]
+// pub struct Expression {
+//     name: String,
+//     kind: DataKind,
+// }
 
-impl Expression {
-    pub fn new() -> Self {
-        Expression {
-            name: "expression(WIP)".to_string(),
-            kind: DataKind::default(),
-        }
-    }
+// impl Expression {
+//     pub fn new() -> Self {
+//         Expression {
+//             name: "expression(WIP)".to_string(),
+//             kind: DataKind::default(),
+//         }
+//     }
 
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-}
+//     pub fn get_name(&self) -> String {
+//         self.name.clone()
+//     }
+// }
 
-impl From<String> for Expression {
-    fn from(s: String) -> Self {
-        Expression {
-            name: s,
-            kind: DataKind::default(),
-        }
-    }
-}
+// impl From<String> for Expression {
+//     fn from(s: String) -> Self {
+//         Expression {
+//             name: s,
+//             kind: DataKind::default(),
+//         }
+//     }
+// }
 
 #[derive(Debug, Default, Clone)]
 pub struct PropertyExpression {
@@ -239,7 +239,7 @@ impl ExprKind {
                 | BinOpKind::StartsWith
                 | BinOpKind::EndsWith
                 | BinOpKind::In => DataKind::Boolean,
-                BinOpKind::Index => todo!(),
+                BinOpKind::Index => expr.kind.get_kind(),
                 BinOpKind::Pipe => DataKind::Pipe,
             },
             ExprKind::UnOp(kind, expr) => match kind {
@@ -249,16 +249,19 @@ impl ExprKind {
                 UnOpKind::Parentheses => expr.kind.get_kind(),
             },
             ExprKind::Cmp(_, _) => DataKind::Boolean,
-            ExprKind::Lit(_) => todo!(),
+            ExprKind::Lit(literal) => DataKind::from(literal.clone()),
             ExprKind::Variable(var) => var.get_kind(),
             ExprKind::PredicateVariable(var) => var.get_kind(),
-            ExprKind::Case(_, _, _) => todo!(),
-            ExprKind::Property(_, _) => todo!(),
-            ExprKind::Label(_, _) => todo!(),
-            ExprKind::Invocation(_, _, _) => todo!(),
-            ExprKind::PredicateFunction(_, _) => todo!(),
-            ExprKind::SubQuery(_, _, _) => todo!(),
-            ExprKind::FilterExpression(_, _, _) => todo!(),
+            ExprKind::Case(_, alternative, _) => alternative.iter().next().map_or_else(
+                || DataKind::Null,
+                |x| x.value.clone().as_ref().kind.get_kind(),
+            ),
+            ExprKind::Property(_, pro) => DataKind::from(pro.prop_type),
+            ExprKind::Label(_, _) => DataKind::Vertex,
+            ExprKind::Invocation(_, _, _) => DataKind::Function,
+            ExprKind::PredicateFunction(_, _) => DataKind::Boolean,
+            ExprKind::SubQuery(_, _, _) => DataKind::Query,
+            ExprKind::FilterExpression(_, _, _) => DataKind::Boolean,
         }
     }
 }

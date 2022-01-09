@@ -31,8 +31,8 @@ fn main() {
     driver.add_query();
 
     // log_record recording intermediate information
-    // let mut log_record = Log::new();
-    // log_record.execute(Box::new(cypher_ast));
+    let mut log_record = Log::new();
+    log_record.execute(Box::new(cypher_ast));
 
-    // log_record.report();
+    log_record.report();
 }
