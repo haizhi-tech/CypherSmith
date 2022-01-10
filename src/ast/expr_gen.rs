@@ -361,9 +361,10 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     query_expr = Expr::from(ExprKind::Property(Box::new(query_expr), property));
                 }
             }
-        } else if (self.complexity < self.limit) && self.random.bool() {
-            //query_expr.kind == ExprKind::Variable { // type check
-
+        } else if (self.complexity < self.limit)
+            && self.random.bool()
+            && (query_expr.kind.get_kind() == DataKind::Vertex)
+        {
             // Nodelabels
             for _ in 0..self.random.under(3) {
                 if self.random.d12() == 1 {
@@ -504,29 +505,30 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
             }
             // FunctionInvocation: FunctionName ( (DISTINCT)? Expression*)
-            8 => {
-                self.complexity += 1;
+            // FunctionInvocation not implement.
+            // 8 => {
+            //     self.complexity += 1;
 
-                // FunctionName: Namespace.SymbolicName
-                // todo: need to implement NameSpace and SymbolicName
-                let function = Expr::from(ExprKind::Lit(Literal::String(
-                    "atlas.shortestpath".to_string(),
-                )));
+            //     // FunctionName: Namespace.SymbolicName
+            //     // todo: need to implement NameSpace and SymbolicName
+            //     let function = Expr::from(ExprKind::Lit(Literal::String(
+            //         "atlas.shortestpath".to_string(),
+            //     )));
 
-                let is_distinct = self.random.bool();
+            //     let is_distinct = self.random.bool();
 
-                // Vec<Expression>
-                let mut vec_expr = Vec::new();
-                for _ in 0..self.random.d2() {
-                    vec_expr.push(self.visit());
-                }
+            //     // Vec<Expression>
+            //     let mut vec_expr = Vec::new();
+            //     for _ in 0..self.random.d2() {
+            //         vec_expr.push(self.visit());
+            //     }
 
-                Expr::from(ExprKind::Invocation(
-                    Box::new(function),
-                    is_distinct,
-                    vec_expr,
-                ))
-            }
+            //     Expr::from(ExprKind::Invocation(
+            //         Box::new(function),
+            //         is_distinct,
+            //         vec_expr,
+            //     ))
+            // }
             // ExistentialSubquery
             9 => {
                 self.complexity += 1;

@@ -1,6 +1,6 @@
 use rand::{distributions::Uniform, rngs::ThreadRng, thread_rng, Rng};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RandomGenerator {
     rng: ThreadRng,
     uniform_d2: Uniform<i32>,

@@ -1,91 +1,9 @@
 use std::fmt::Display;
 
 use super::util::RESERVED_WORD;
-use super::{DataKind, Property, RandomGenerator, VariableManager};
+use super::{DataKind, Property, Variable};
 use crate::ast::{CypherNode, TransformVisitor};
 use crate::meta::Label;
-
-#[derive(Debug, Default, Clone)]
-pub struct Variable {
-    name: String,
-    kind: DataKind,
-}
-
-impl Variable {
-    pub fn new(name: String) -> Self {
-        Variable {
-            name,
-            kind: DataKind::default(),
-        }
-    }
-
-    pub fn new_var(name: String, kind: DataKind) -> Self {
-        Variable { name, kind }
-    }
-}
-
-impl Variable {
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn get_kind(&self) -> DataKind {
-        self.kind.clone()
-    }
-}
-
-impl Display for Variable {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.name)
-    }
-}
-
-// one ast tree use one
-#[derive(Debug, Default)]
-pub struct VariableGenerator {
-    name: String,
-    number: u32,
-    pub manager: VariableManager,
-}
-
-impl VariableGenerator {
-    pub fn new() -> Self {
-        VariableGenerator {
-            name: "v".to_string(),
-            number: 0u32,
-            manager: VariableManager::default(),
-        }
-        // Variable::
-    }
-
-    pub fn current_variable(&self) -> String {
-        self.name.clone() + &self.number.to_string()
-    }
-
-    pub fn new_variable(&mut self) -> Variable {
-        let var = Variable::new(self.name.clone() + &self.number.to_string());
-        self.number += 1u32;
-        var
-    }
-
-    pub fn get_old_variable(&mut self) -> Variable {
-        let mut random = RandomGenerator::new();
-        let old_number = random.d100() % ((self.number + 1) as i32);
-        Variable::new(self.name.clone() + &old_number.to_string())
-    }
-
-    pub fn get_procedure_method(&mut self) -> Variable {
-        Variable::new("shortestPath".to_string())
-    }
-
-    pub fn get_procedure_result(&mut self) -> Variable {
-        Variable::new("procedure_result(WIP)".to_string())
-    }
-
-    pub fn get_symbolic_or_integer(&mut self) -> Variable {
-        Variable::new("symbolic_or_integer(WIP)".to_string())
-    }
-}
 
 #[derive(Debug, Default, Clone)]
 pub struct NameSpace {
@@ -132,23 +50,23 @@ impl NameSpace {
 //     }
 // }
 
-#[derive(Debug, Default, Clone)]
-pub struct PropertyExpression {
-    name: String,
-}
+// #[derive(Debug, Default, Clone)]
+// pub struct PropertyExpression {
+//     name: String,
+// }
 
-// todo: need to implementation.
-impl PropertyExpression {
-    pub fn new() -> Self {
-        PropertyExpression {
-            name: "a.age".to_string(),
-        }
-    }
+// // todo: need to implementation.
+// impl PropertyExpression {
+//     pub fn new() -> Self {
+//         PropertyExpression {
+//             name: "a.age".to_string(),
+//         }
+//     }
 
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-}
+//     pub fn get_name(&self) -> String {
+//         self.name.clone()
+//     }
+// }
 
 // #[derive(Debug, Default, Clone)]
 // pub struct NodeLabel {

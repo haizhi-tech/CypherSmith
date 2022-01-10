@@ -1,8 +1,6 @@
 use super::cypher::{ConvertVisitor, CypherNode};
 
-use crate::common::{
-    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
-};
+use crate::common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable};
 use crate::meta::Label;
 
 pub struct TransformVisitor {
@@ -391,7 +389,7 @@ impl ConvertVisitor for TransformVisitor {
     /// SetItem:  (Property = Expression | Variable = Expression | Variable += Expression | Variable = NodeLabels)
     fn visit_set(
         &mut self,
-        property_set: Vec<(PropertyExpression, Expr)>,
+        property_set: Vec<(Expr, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<Label>)>,
@@ -399,7 +397,7 @@ impl ConvertVisitor for TransformVisitor {
         let mut set_string = "SET ".to_string();
 
         let property_string = property_set.into_iter().map(|(property, expr)| {
-            let mut ret = property.get_name();
+            let mut ret = property.to_string();
             ret += "=";
             ret += &expr.to_string();
             ret
@@ -530,7 +528,7 @@ impl ConvertVisitor for TransformVisitor {
     fn visit_remove(
         &mut self,
         variable_remove: Vec<(Variable, Vec<Label>)>,
-        property_remove: Vec<PropertyExpression>,
+        property_remove: Vec<Expr>,
     ) -> Self::Output {
         let mut remove_string = "REMOVE ".to_string();
 
@@ -550,7 +548,7 @@ impl ConvertVisitor for TransformVisitor {
 
         let property = property_remove
             .into_iter()
-            .map(|property| property.get_name());
+            .map(|property| property.to_string());
 
         let res_chain = variable.chain(property).collect::<Vec<_>>().join(",");
 

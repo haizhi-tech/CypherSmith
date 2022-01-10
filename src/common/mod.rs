@@ -1,24 +1,26 @@
+mod diagnostic;
 mod expr;
 mod log;
-mod manager;
 mod rand;
 mod typedef;
 mod util;
+mod variable;
 
 pub use self::rand::RandomGenerator;
 // pub use expr::{
 //     Expr, ExprKind, Expression, Literal, NameSpace, NodeLabel, PropertyExpression,
 //     RelationshipDirection, SchemaName, Variable, VariableGenerator,
 // };
+pub use diagnostic::*;
 pub use expr::*;
 pub use log::Log;
-pub use manager::{DataKind, VariableManager};
 pub use typedef::*;
 pub use util::*;
+pub use variable::{DataKind, Variable, VariableGenerator};
 
 #[cfg(test)]
 mod tests {
-    use super::{Log, RandomGenerator, VariableGenerator};
+    use super::{Log, VariableGenerator};
     use crate::ast::{CypherNode, LogVisitor};
 
     #[test]

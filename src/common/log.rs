@@ -1,8 +1,6 @@
 use std::cmp;
 
-use super::{
-    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
-};
+use super::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable};
 use crate::{
     ast::{CypherNode, LogVisitor},
     meta::Label,
@@ -298,7 +296,7 @@ impl LogVisitor for Log {
 
     fn visit_set(
         &mut self,
-        property_set: Vec<(PropertyExpression, Expr)>,
+        property_set: Vec<(Expr, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<Label>)>,
@@ -340,7 +338,7 @@ impl LogVisitor for Log {
     fn visit_remove(
         &mut self,
         variable_remove: Vec<(Variable, Vec<Label>)>,
-        property_remove: Vec<PropertyExpression>,
+        property_remove: Vec<Expr>,
     ) -> Self::Output {
         let sum_nodes = variable_remove.len() + property_remove.len();
         (sum_nodes as u32, 1)

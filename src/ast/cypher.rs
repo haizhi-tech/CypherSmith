@@ -1,6 +1,4 @@
-use crate::common::{
-    Expr, FieldValue, NameSpace, Property, PropertyExpression, RelationshipDirection, Variable,
-};
+use crate::common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable};
 use crate::meta::Label;
 
 use paste::paste;
@@ -224,7 +222,8 @@ cypher_nodes_impl! {
 
     /// Set
     Set {
-        property_set: Vec<(PropertyExpression, Expr)>,
+        // property_set: PropertyExpression = ValueExpression
+        property_set: Vec<(Expr, Expr)>,
         variable_set: Vec<(Variable, Expr)>,
         variable_add: Vec<(Variable, Expr)>,
         label_set: Vec<(Variable, Vec<Label>)>,
@@ -232,14 +231,14 @@ cypher_nodes_impl! {
 
     /// ExplicitProcedureInvocation
     ExplicitProcedureInvocation {
-        // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
+        // todo: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
         expressions: Vec<Expr>,
     },
 
     /// ImplicitProcedureInvocation
     ImplicitProcedureInvocation {
-        // todo: need to implementation NameSpace.SymbolicName ed: atlas.shortestpath()
+        // todo: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
     },
 
@@ -253,7 +252,7 @@ cypher_nodes_impl! {
     /// Remove
     Remove {
         variable_remove: Vec<(Variable, Vec<Label>)>,
-        property_remove: Vec<PropertyExpression>,
+        property_remove: Vec<Expr>,
     },
 
     /// Pattern

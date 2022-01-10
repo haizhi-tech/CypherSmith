@@ -63,6 +63,11 @@ impl GraphSchema {
         let vertex_label = self.rand_vertex_label(random);
         vertex_label.random_property(random)
     }
+
+    pub fn random_edge_property(&self, random: &mut RandomGenerator) -> Property {
+        let edge_label = self.rand_edge_label(random);
+        edge_label.random_property(random)
+    }
 }
 
 #[cfg(test)]

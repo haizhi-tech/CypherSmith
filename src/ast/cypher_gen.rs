@@ -3,8 +3,7 @@ use super::{
     cypher::{CypherNode, CypherNodeVisitor},
 };
 use crate::common::{
-    DataKind, Expr, NameSpace, PropertyExpression, RandomGenerator, RelationshipDirection,
-    VariableGenerator,
+    DataKind, Expr, ExprKind, NameSpace, RandomGenerator, RelationshipDirection, VariableGenerator,
 };
 use crate::meta::GraphSchema;
 
@@ -68,6 +67,26 @@ impl CypherGenerator {
         }
         let mut expr_generator = ExprGenerator::new(self);
         Some(expr_generator.visit())
+    }
+}
+
+impl CypherGenerator {
+    fn gen_property_expr(&mut self, kind: DataKind) -> Option<Expr> {
+        let var = self.variables.get_target_variable(kind.clone());
+        let property = match var {
+            Ok(var) => {
+                let prop = if kind == DataKind::Vertex {
+                    self.graph_schema.random_vertex_property(&mut self.random)
+                } else {
+                    self.graph_schema.random_edge_property(&mut self.random)
+                };
+
+                let kind = ExprKind::Property(Box::new(Expr::from(ExprKind::Variable(var))), prop);
+                Some(Expr::from(kind))
+            }
+            _ => None,
+        };
+        property
     }
 }
 
@@ -444,7 +463,11 @@ impl CypherNodeVisitor for CypherGenerator {
         }
     }
 
-    // set: set (property = Expression | Variable = Expression | Variable += Expression | Variable = NodeLabels)*
+    /// ### Set
+    ///
+    /// set (PropertyExpression = Expression | Variable = Expression | Variable += Expression | Variable = NodeLabels)*
+    ///
+    /// PropertyExpression: Atom (PropertyLookUp)*
     fn visit_set(&mut self) -> Self::Output {
         let mut property_set = vec![];
         let mut variable_set = vec![];
@@ -452,45 +475,62 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut label_set = vec![];
 
         // first set_item
-        match self.random.d6() % 3 {
-            0 => {
-                let mut expr_generator = ExprGenerator::new(self);
-                let property = PropertyExpression::new();
-                let expression = expr_generator.visit();
-                property_set.push((property, expression));
-            }
-            1 => {
-                let variable = self.variables.get_old_variable();
-                let mut expr_generator = ExprGenerator::new(self);
-                let expression = expr_generator.visit();
-                if self.random.bool() {
-                    variable_set.push((variable, expression));
-                } else {
-                    variable_add.push((variable, expression));
+        for _ in 0..self.random.d2() + 1 {
+            match self.random.d6() % 3 {
+                0 => {
+                    // Correct PropertyExpression.
+                    let property = if self.random.d9() > 1 {
+                        // Vertex Property
+                        self.gen_property_expr(DataKind::Vertex)
+                    } else {
+                        // Edge Property
+                        self.gen_property_expr(DataKind::Edge)
+                    };
+
+                    if property.is_none() {
+                        continue;
+                    }
+
+                    let mut expr_generator = ExprGenerator::new(self);
+                    let expression = expr_generator.visit();
+                    property_set.push((property.unwrap(), expression));
                 }
-            }
-            2 => {
-                let variable = self.variables.get_old_variable();
-                // NodeLabels: NodeLabel+
-                let mut node_labels = vec![];
-                // let first_label = NodeLabel::new();
-                // node_labels.push(first_label);
+                1 => {
+                    let variable = self.variables.get_old_variable();
+                    let mut expr_generator = ExprGenerator::new(self);
+                    let expression = expr_generator.visit();
+                    if self.random.bool() {
+                        variable_set.push((variable, expression));
+                    } else {
+                        variable_add.push((variable, expression));
+                    }
+                }
+                2 => {
+                    let variable = self.variables.get_old_variable();
+                    // NodeLabels: NodeLabel+
+                    let mut node_labels = vec![];
+                    // let first_label = NodeLabel::new();
+                    // node_labels.push(first_label);
 
-                let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
-                node_labels.push(node_label);
+                    let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
+                    node_labels.push(node_label);
 
-                // todo: multi node labels.
-                // for _ in 0..self.random.d2() {
-                //     let node_label = NodeLabel::new();
-                //     node_labels.push(node_label);
-                // }
-                label_set.push((variable, node_labels));
+                    // todo: multi node labels.
+                    // for _ in 0..self.random.d2() {
+                    //     let node_label = NodeLabel::new();
+                    //     node_labels.push(node_label);
+                    // }
+                    label_set.push((variable, node_labels));
+                }
+                _ => {}
             }
-            _ => {}
         }
 
-        // todo: repeat above operator.
-        for _ in 0..self.random.d2() {}
+        let set_size =
+            property_set.len() + variable_set.len() + variable_add.len() + label_set.len();
+        if set_size == 0 {
+            return self.visit_set();
+        }
 
         CypherNode::Set {
             property_set,
@@ -505,26 +545,41 @@ impl CypherNodeVisitor for CypherGenerator {
         let mut variable_remove = vec![];
         let mut property_remove = vec![];
 
-        if self.random.bool() {
-            let variable = self.variables.get_old_variable();
+        for _ in 0..self.random.d2() + 1 {
+            if self.random.bool() {
+                let variable = self.variables.get_old_variable();
 
-            let mut node_labels = vec![];
-            let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
-            node_labels.push(node_label);
+                let mut node_labels = vec![];
+                let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
+                node_labels.push(node_label);
 
-            // todo: multi node labels.
-            // for _ in 0..self.random.d2() {
-            //     let node_label = NodeLabel::new();
-            //     node_labels.push(node_label);
-            // }
-            variable_remove.push((variable, node_labels));
-        } else {
-            let property_expression = PropertyExpression::new();
-            property_remove.push(property_expression);
+                // todo: multi node labels.
+                // for _ in 0..self.random.d2() {
+                //     let node_label = NodeLabel::new();
+                //     node_labels.push(node_label);
+                // }
+                variable_remove.push((variable, node_labels));
+            } else {
+                let property = if self.random.d9() > 1 {
+                    // Vertex Property
+                    self.gen_property_expr(DataKind::Vertex)
+                } else {
+                    // Edge Property
+                    self.gen_property_expr(DataKind::Edge)
+                };
+
+                if property.is_none() {
+                    continue;
+                }
+
+                property_remove.push(property.unwrap());
+            }
         }
 
-        // todo: repeat above operator.
-        for _ in 0..self.random.d2() {}
+        let set_size = variable_remove.len() + property_remove.len();
+        if set_size == 0 {
+            return self.visit_remove();
+        }
 
         CypherNode::Remove {
             variable_remove,
@@ -668,10 +723,7 @@ impl CypherNodeVisitor for CypherGenerator {
     // PatternPart: (Variable =)? pattern_element
     fn visit_pattern_part(&mut self) -> Self::Output {
         let var = if self.random.bool() {
-            let variable = self.variables.new_variable();
-            self.variables
-                .manager
-                .add_variable(variable.get_name(), DataKind::Path);
+            let variable = self.variables.new_kind_variable(DataKind::Path);
             Some(variable)
         } else {
             None
@@ -713,10 +765,7 @@ impl CypherNodeVisitor for CypherGenerator {
     // NodePattern: ( Variable? (:label)* Properties)
     fn visit_node_pattern(&mut self) -> Self::Output {
         let var = if self.random.bool() {
-            let variable = self.variables.new_variable();
-            self.variables
-                .manager
-                .add_variable(variable.get_name(), DataKind::Vertex);
+            let variable = self.variables.new_kind_variable(DataKind::Vertex);
             Some(variable)
         } else {
             None
@@ -759,10 +808,7 @@ impl CypherNodeVisitor for CypherGenerator {
         };
 
         let var = if self.random.bool() {
-            let variable = self.variables.new_variable();
-            self.variables
-                .manager
-                .add_variable(variable.get_name(), DataKind::Edge);
+            let variable = self.variables.new_kind_variable(DataKind::Edge);
             Some(variable)
         } else {
             None
