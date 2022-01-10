@@ -6,13 +6,13 @@ use crate::{
 };
 
 pub struct TransformVisitor {
-    cypher_string: String,
+    // cypher_string: String,
 }
 
 impl TransformVisitor {
     pub fn new() -> TransformVisitor {
         Self {
-            cypher_string: "".to_string(),
+            // cypher_string: "".to_string(),
         }
     }
 
