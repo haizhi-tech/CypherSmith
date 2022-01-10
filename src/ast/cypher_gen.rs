@@ -1,13 +1,15 @@
 use super::{
     constants,
     cypher::{CypherNode, CypherNodeVisitor},
+    expr_gen::ExprGenerator,
 };
-use crate::common::{
-    DataKind, Expr, ExprKind, NameSpace, RandomGenerator, RelationshipDirection, VariableGenerator,
+use crate::{
+    common::{
+        DataKind, Expr, ExprKind, NameSpace, RandomGenerator, RelationshipDirection,
+        VariableGenerator,
+    },
+    meta::GraphSchema,
 };
-use crate::meta::GraphSchema;
-
-use super::expr_gen::ExprGenerator;
 
 pub struct CypherGenerator {
     random: RandomGenerator,
@@ -738,7 +740,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     // pattern_element: NodePattern (RelationshipPattern NodePattern)*
     fn visit_pattern_element(&mut self) -> Self::Output {
-        let parenthesis = self.random.bool();
+        let parenthesis = self.random.d12() < 1;
 
         let node_pattern_node = self.visit_node_pattern();
         let node_pattern = Box::new(node_pattern_node);

@@ -1,5 +1,4 @@
-use super::cypher_gen::CypherGenerator;
-use super::{constants, ExpressionNodeVisitor};
+use super::{constants, cypher_gen::CypherGenerator, ExpressionNodeVisitor};
 use crate::common::{
     BinOpKind, CaseAlternative, CmpKind, DataKind, Expr, ExprKind, Literal, PredicateFunctionKind,
     RandomGenerator, SubQueryKind, UnOpKind,

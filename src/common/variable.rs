@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fmt::Display};
+use std::{collections::HashMap, fmt::Display};
 
 use super::{DataType, Diagnostic, Literal, RandomGenerator};
 
@@ -108,11 +108,11 @@ impl VariableManager {
         let vars = self
             .types
             .get(&target)
-            .ok_or(Diagnostic::warn("need retry", None))?;
+            .ok_or_else(|| Diagnostic::warn("need retry", None))?;
         let idx = self.random.under(vars.len() as _);
         let var = vars
             .get(idx as usize)
-            .ok_or(Diagnostic::bug("variable out of range.", None))?;
+            .ok_or_else(|| Diagnostic::bug("variable out of range.", None))?;
         Ok(Variable::new_var(var.to_string(), target))
     }
 }

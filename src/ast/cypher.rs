@@ -1,5 +1,7 @@
-use crate::common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable};
-use crate::meta::Label;
+use crate::{
+    common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable},
+    meta::Label,
+};
 
 use paste::paste;
 

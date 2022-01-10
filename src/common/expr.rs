@@ -1,9 +1,10 @@
 use std::fmt::Display;
 
-use super::util::RESERVED_WORD;
 use super::{DataKind, Property, Variable};
-use crate::ast::{CypherNode, TransformVisitor};
-use crate::meta::Label;
+use crate::{
+    ast::{CypherNode, TransformVisitor},
+    meta::Label,
+};
 
 #[derive(Debug, Default, Clone)]
 pub struct NameSpace {
@@ -21,94 +22,6 @@ impl NameSpace {
         self.name_space.clone()
     }
 }
-
-// #[derive(Debug, Default)]
-// pub struct Expression {
-//     name: String,
-//     kind: DataKind,
-// }
-
-// impl Expression {
-//     pub fn new() -> Self {
-//         Expression {
-//             name: "expression(WIP)".to_string(),
-//             kind: DataKind::default(),
-//         }
-//     }
-
-//     pub fn get_name(&self) -> String {
-//         self.name.clone()
-//     }
-// }
-
-// impl From<String> for Expression {
-//     fn from(s: String) -> Self {
-//         Expression {
-//             name: s,
-//             kind: DataKind::default(),
-//         }
-//     }
-// }
-
-// #[derive(Debug, Default, Clone)]
-// pub struct PropertyExpression {
-//     name: String,
-// }
-
-// // todo: need to implementation.
-// impl PropertyExpression {
-//     pub fn new() -> Self {
-//         PropertyExpression {
-//             name: "a.age".to_string(),
-//         }
-//     }
-
-//     pub fn get_name(&self) -> String {
-//         self.name.clone()
-//     }
-// }
-
-// #[derive(Debug, Default, Clone)]
-// pub struct NodeLabel {
-//     label_name: String,
-// }
-
-// // todo: need to implementation get old nodelabel.
-// impl NodeLabel {
-//     pub fn new() -> Self {
-//         NodeLabel {
-//             label_name: "NodeLabel(WIP)".to_string(),
-//         }
-//     }
-
-//     pub fn get_name(&self) -> String {
-//         self.label_name.clone()
-//     }
-// }
-
-// #[derive(Debug, Default)]
-// pub struct SchemaName {
-//     label_name: String,
-// }
-
-// impl SchemaName {
-//     // todo: need to modify, SchemaName not correct.
-//     pub fn new(random: &mut RandomGenerator) -> Self {
-//         let label_name = if random.d12() < 6 {
-//             // Variable name
-//             NodeLabel::new().get_name()
-//         } else {
-//             // label_name == ReserverdWord
-//             let index = random.under(48);
-//             RESERVED_WORD[index as usize].to_string()
-//         };
-//         SchemaName { label_name }
-//     }
-
-//     pub fn get_name(&self) -> String {
-//         self.label_name.clone()
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub enum ExprKind {

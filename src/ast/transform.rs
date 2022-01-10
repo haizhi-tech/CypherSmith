@@ -1,7 +1,9 @@
 use super::cypher::{ConvertVisitor, CypherNode};
 
-use crate::common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable};
-use crate::meta::Label;
+use crate::{
+    common::{Expr, FieldValue, NameSpace, Property, RelationshipDirection, Variable},
+    meta::Label,
+};
 
 pub struct TransformVisitor {
     cypher_string: String,

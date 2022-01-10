@@ -1,7 +1,9 @@
-use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
-use crate::common::RandomGenerator;
-use crate::config::CypherConfig;
-use crate::meta::GraphSchema;
+use crate::{
+    ast::{CypherGenerator, CypherNode, TransformVisitor},
+    common::RandomGenerator,
+    config::CypherConfig,
+    meta::GraphSchema,
+};
 
 #[derive(Default)]
 pub struct Driver {

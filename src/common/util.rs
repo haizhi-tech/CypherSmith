@@ -1,4 +1,4 @@
-// pub const RESERVED_WORD: &'static [&'static str] = &[
+#[allow(dead_code)]
 pub const RESERVED_WORD: &[&str] = &[
     "All",
     "And",
