@@ -380,13 +380,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
     ///
     /// Literal | Parameter | Case Expression | COUNT (*)
     fn visit_atom(&mut self) -> Self::Output {
-        let select_number = self.random.d20();
+        let select_number = self.random.d100();
 
         match select_number {
             // Literal Expression
-            0 => Expr::from(ExprKind::Lit(self.random_literal())),
+            0..=10 => Expr::from(ExprKind::Lit(self.random_literal())),
             // CaseExpression
-            1 => {
+            11..=13 => {
                 self.complexity += 1;
                 let case_expr = if self.random.d6() == 1 {
                     Some(Box::new(self.visit()))
@@ -413,13 +413,17 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 Expr::from(ExprKind::Case(case_expr, case_alternatives, else_expr))
             }
             // COUNT (*)
-            2 => Expr::from(ExprKind::Lit(Literal::String("COUNT (*)".to_string()))),
+            14..=20 => Expr::from(ExprKind::Lit(Literal::String("COUNT (*)".to_string()))),
             // ListComprehension: [FilterExpression (|Expression)? ]
-            3 => {
+            21..=23 => {
                 self.complexity += 1;
 
-                let var = self.cypher.variables.get_old_variable();
-                let in_expr = Box::new(self.visit());
+                let in_expression = self.visit();
+                let var = self
+                    .cypher
+                    .variables
+                    .new_kind_variable(in_expression.kind.get_kind());
+                let in_expr = Box::new(in_expression);
                 let where_expr = if self.random.d12() == 1 {
                     Some(Box::new(self.visit()))
                 } else {
@@ -441,7 +445,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 Expr::from(ExprKind::Lit(Literal::List(vec![filter_expr])))
             }
             // PatternComprehension: [(variable =)? RelationShipsPattern (Where)? | Expression]
-            4 => {
+            24..=29 => {
                 self.complexity += 1;
 
                 let where_clause = if self.random.d20() == 1 {
@@ -467,11 +471,15 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
             // ALL|ANY|NONE|SINGLE (FilterExpression)
             // FilterExpression: Variable IN Expression (Where Expression)?
-            5 => {
+            30..=35 => {
                 self.complexity += 1;
 
-                let var = self.cypher.variables.get_old_variable();
-                let in_expr = Box::new(self.visit());
+                let in_expression = self.visit();
+                let var = self
+                    .cypher
+                    .variables
+                    .new_kind_variable(in_expression.kind.get_kind());
+                let in_expr = Box::new(in_expression);
                 let where_expr = if self.random.d12() == 1 {
                     Some(Box::new(self.visit()))
                 } else {
@@ -488,7 +496,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 Expr::from(kind)
             }
             // RelationShipsPattern
-            6 => {
+            36..=40 => {
                 self.complexity += 1;
 
                 let pattern_query = self.cypher.expr_relation_pattern();
@@ -499,7 +507,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 ))
             }
             // ParenthesizedExpression
-            7 => {
+            41..=45 => {
                 let expression = self.visit();
                 Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
             }
@@ -529,7 +537,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             //     ))
             // }
             // ExistentialSubquery
-            9 => {
+            46..=49 => {
                 self.complexity += 1;
 
                 // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
@@ -541,7 +549,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 ))
             }
             // Variable
-            10 => {
+            70..=99 => {
                 let var = self.cypher.variables.get_old_variable();
                 Expr::from(ExprKind::Variable(var))
             }

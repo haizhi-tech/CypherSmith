@@ -73,9 +73,11 @@ impl CypherGenerator {
 }
 
 impl CypherGenerator {
+    /// Generator Property Expression.
     fn gen_property_expr(&mut self, kind: DataKind) -> Option<Expr> {
         let var = self.variables.get_target_variable(kind.clone());
-        let property = match var {
+
+        match var {
             Ok(var) => {
                 let prop = if kind == DataKind::Vertex {
                     self.graph_schema.random_vertex_property(&mut self.random)
@@ -87,8 +89,7 @@ impl CypherGenerator {
                 Some(Expr::from(kind))
             }
             _ => None,
-        };
-        property
+        }
     }
 }
 
@@ -388,7 +389,8 @@ impl CypherNodeVisitor for CypherGenerator {
     fn visit_unwind(&mut self) -> Self::Output {
         let mut expr_generator = ExprGenerator::new(self);
         let expression = expr_generator.visit();
-        let variable = self.variables.new_variable();
+        let var_kind = expression.kind.get_kind();
+        let variable = self.variables.new_kind_variable(var_kind);
 
         CypherNode::Unwind {
             expression,
@@ -508,11 +510,13 @@ impl CypherNodeVisitor for CypherGenerator {
                     }
                 }
                 2 => {
-                    let variable = self.variables.get_old_variable();
+                    let variable = self.variables.get_target_variable(DataKind::Vertex);
+                    let var = match variable {
+                        Ok(var) => var,
+                        _ => self.variables.get_old_variable(),
+                    };
                     // NodeLabels: NodeLabel+
                     let mut node_labels = vec![];
-                    // let first_label = NodeLabel::new();
-                    // node_labels.push(first_label);
 
                     let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
                     node_labels.push(node_label);
@@ -522,7 +526,7 @@ impl CypherNodeVisitor for CypherGenerator {
                     //     let node_label = NodeLabel::new();
                     //     node_labels.push(node_label);
                     // }
-                    label_set.push((variable, node_labels));
+                    label_set.push((var, node_labels));
                 }
                 _ => {}
             }
@@ -549,7 +553,11 @@ impl CypherNodeVisitor for CypherGenerator {
 
         for _ in 0..self.random.d2() + 1 {
             if self.random.bool() {
-                let variable = self.variables.get_old_variable();
+                let variable = self.variables.get_target_variable(DataKind::Vertex);
+                let var = match variable {
+                    Ok(var) => var,
+                    _ => self.variables.get_old_variable(),
+                };
 
                 let mut node_labels = vec![];
                 let node_label = self.graph_schema.rand_vertex_label(&mut self.random);
@@ -560,7 +568,7 @@ impl CypherNodeVisitor for CypherGenerator {
                 //     let node_label = NodeLabel::new();
                 //     node_labels.push(node_label);
                 // }
-                variable_remove.push((variable, node_labels));
+                variable_remove.push((var, node_labels));
             } else {
                 let property = if self.random.d9() > 1 {
                     // Vertex Property
@@ -646,7 +654,9 @@ impl CypherNodeVisitor for CypherGenerator {
             let expression = expr_generator.visit();
 
             let var = if self.random.bool() {
-                let variable = self.variables.new_variable();
+                let expr_kind = expression.kind.get_kind();
+                let variable = self.variables.new_kind_variable(expr_kind);
+
                 Some(variable)
             } else {
                 None
@@ -661,7 +671,9 @@ impl CypherNodeVisitor for CypherGenerator {
             let expression = expr_generator.visit();
 
             let var = if self.random.bool() {
-                let variable = self.variables.new_variable();
+                let expr_kind = expression.kind.get_kind();
+                let variable = self.variables.new_kind_variable(expr_kind);
+
                 Some(variable)
             } else {
                 None
