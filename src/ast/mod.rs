@@ -26,21 +26,6 @@ mod tests {
     use crate::meta::{GraphSchema, Label, LabelKind};
 
     #[test]
-    fn cypher_generator_test() {
-        let mut generator = CypherGenerator::new();
-        let cypher_node = generator.visit();
-        println!("{:?}", cypher_node);
-    }
-
-    #[test]
-    fn expression_generator_test() {
-        let mut cypher_generator = CypherGenerator::new();
-        let mut x = ExprGenerator::new(&mut cypher_generator);
-        let ans = x.visit();
-        println!("{:?}", ans);
-    }
-
-    #[test]
     fn expression_with_label_test() {
         let mut labels = vec![];
         // node label: Person {id: i64, name: String}
@@ -159,12 +144,13 @@ mod tests {
         let graph_schema = GraphSchema::new("test".to_string(), labels);
         let mut generator = CypherGenerator::new_schema(&graph_schema);
         generator.limit = constants::DEFAULT_EXPRESSION_LIMIT;
-        let expression_string = generator.visit_expression();
+        let mut expr_generator = ExprGenerator::new(&mut generator);
+        let expression_string = expr_generator.visit();
         println!("{}", expression_string);
     }
 
     #[test]
-    fn match_clause_test() {
+    fn regular_query_test() {
         let mut labels = vec![];
         // node label: Person {id: i64, name: String}
         let vertex_properties = vec![
@@ -218,7 +204,7 @@ mod tests {
         });
         let graph_schema = GraphSchema::new("test".to_string(), labels);
         let mut generator = CypherGenerator::new_schema(&graph_schema);
-        let expression_string = generator.test_match_clause();
+        let expression_string = generator.visit();
         println!("{:?}", expression_string);
     }
 }

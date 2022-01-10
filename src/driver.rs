@@ -1,17 +1,23 @@
 use crate::ast::{CypherGenerator, CypherNode, TransformVisitor};
+use crate::common::RandomGenerator;
+use crate::config::CypherConfig;
 use crate::meta::GraphSchema;
 
 #[derive(Default)]
 pub struct Driver {
     queries: u32,
+    random: RandomGenerator,
     graph_schema: GraphSchema,
+    cypher_config: CypherConfig,
 }
 
 impl Driver {
     pub fn new() -> Driver {
         Driver {
             queries: 0,
+            random: RandomGenerator::default(),
             graph_schema: GraphSchema::default(),
+            cypher_config: CypherConfig::default(),
         }
     }
 
@@ -20,11 +26,19 @@ impl Driver {
         self.graph_schema.clone()
     }
 
+    pub fn load_config(&mut self, config: CypherConfig) -> CypherConfig {
+        self.cypher_config = config;
+        self.cypher_config.clone()
+    }
+
     // ast tree construct
-    pub fn execute(&self) -> CypherNode {
+    pub fn execute(&mut self) -> CypherNode {
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
-        ast_generator.visit()
-        // ast_generator.test_match_clause()
+        if self.cypher_config.call_query && self.random.d9() > 7 {
+            ast_generator.call_query()
+        } else {
+            ast_generator.visit()
+        }
     }
 
     // ast tree transfrom to cypher string.

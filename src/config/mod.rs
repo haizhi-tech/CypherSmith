@@ -1,6 +1,8 @@
 use clap::Parser;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+/// GraphSchema Config.
 #[derive(Parser)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 #[clap(
@@ -11,25 +13,16 @@ use std::path::PathBuf;
 ## import schema
 $ cypher-smith --schema schema.json
 
+## import schema and basic config.
+$ cypher-smith --schema schema.json --config config.serde_json
+
 "#
 )]
 pub struct ArgsConfig {
-    // #[clap(
-    //     short,
-    //     long,
-    //     default_value = "127.0.0.1:21021",
-    //     value_name = "HOST:PORT",
-    //     help = "atlas server addr"
-    // )]
-    // #[doc(alias = "server_addr")]
-    // pub address: std::net::SocketAddrV4,
-    // #[clap(short, long, default_value = "root", value_name = "STRING")]
-    // pub username: String,
-    // #[clap(short, long, default_value = "root", value_name = "STRING")]
-    // pub password: String,
-    /// import schema
-    #[clap(short, long, value_name = "PATH", help = "path of schema.json")]
+    #[clap(short, long, value_name = "PATH", help = "schema information")]
     pub schema: Option<PathBuf>,
+    #[clap(short, long, value_name = "PATH", help = "basic config information")]
+    pub config: Option<PathBuf>,
 }
 
 impl Default for ArgsConfig {
@@ -37,3 +30,17 @@ impl Default for ArgsConfig {
         Self::parse_from::<&[&'static str], &&'static str>(&[])
     }
 }
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct CypherConfig {
+    // StandaloneCall
+    pub call_query: bool,
+}
+
+// impl Default for CypherConfig {
+//     fn default() -> Self {
+//         CypherConfig {
+//             call_query: false,
+//         }
+//     }
+// }

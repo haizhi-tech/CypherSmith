@@ -19,15 +19,6 @@ pub struct CypherGenerator {
 }
 
 impl CypherGenerator {
-    pub fn new() -> Self {
-        CypherGenerator {
-            graph_schema: GraphSchema::default(),
-            random: RandomGenerator::new(),
-            variables: VariableGenerator::new(),
-            limit: constants::DEFAULT_QUERY_LIMIT,
-        }
-    }
-
     pub fn new_schema(graph_schema: &GraphSchema) -> Self {
         CypherGenerator {
             graph_schema: graph_schema.clone(),
@@ -39,21 +30,25 @@ impl CypherGenerator {
 }
 
 impl CypherGenerator {
-    // exec:
+    /// Generator Expr SubQuery.
     pub fn exec(&mut self) -> CypherNode {
         self.variables = VariableGenerator::new();
         self.visit_query()
     }
 
+    /// Generator RegularQuery
     pub fn visit(&mut self) -> CypherNode {
         // init the limit parameter each new cypher.
         self.limit = constants::DEFAULT_QUERY_LIMIT;
         self.variables = VariableGenerator::new();
-        self.visit_query()
+        self.visit_regular_query()
     }
 
-    pub fn visit_expression(&mut self) -> String {
-        "expression".to_string()
+    pub fn call_query(&mut self) -> CypherNode {
+        // StandaloneCall
+        self.limit = constants::DEFAULT_QUERY_LIMIT;
+        self.variables = VariableGenerator::new();
+        self.visit_standalone_call()
     }
 
     /// Pattern: RelationShipsPattern
@@ -64,10 +59,6 @@ impl CypherGenerator {
     /// Pattern: (Variable=)? RelationshipsPattern
     pub fn expr_pattern(&mut self) -> CypherNode {
         self.visit_pattern_part()
-    }
-
-    pub fn test_match_clause(&mut self) -> CypherNode {
-        self.visit_match()
     }
 
     // #[inline]
@@ -85,11 +76,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     /// query: regular_query | standaloneCall
     fn visit_query(&mut self) -> Self::Output {
-        let query = if self.random.d12() > 1 {
-            self.visit_regular_query()
-        } else {
-            self.visit_standalone_call()
-        };
+        let query = self.visit_regular_query();
 
         CypherNode::Query {
             query: Box::new(query),
@@ -347,7 +334,7 @@ impl CypherNodeVisitor for CypherGenerator {
         let reading_clause = match self.random.d12() {
             0 => self.visit_match(),
             1 => self.visit_unwind(),
-            2 => self.visit_in_query_call(),
+            // 2 => self.visit_in_query_call(),
             _ => {
                 // todo: need to modify
                 self.visit_match()

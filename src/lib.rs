@@ -6,6 +6,6 @@ mod driver;
 mod meta;
 
 pub use common::Log;
-pub use config::ArgsConfig;
+pub use config::{ArgsConfig, CypherConfig};
 pub use driver::Driver;
 pub use meta::GraphSchema;

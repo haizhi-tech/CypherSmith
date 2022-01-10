@@ -1,4 +1,4 @@
-use cypher_smith::{ArgsConfig, Driver, GraphSchema, Log};
+use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema, Log};
 
 fn main() {
     // get user config.
@@ -17,6 +17,14 @@ fn main() {
         let schema = serde_json::from_str::<GraphSchema>(&json).unwrap();
         println!("Input schema information: \n{:?}", schema);
         driver.load_schema(schema);
+    }
+
+    if let Some(ref config_path) = config.config {
+        let config_path = config_path.clone();
+        let json = std::fs::read_to_string(config_path).unwrap();
+        let config = serde_json::from_str::<CypherConfig>(&json).unwrap();
+        println!("Input basic config information: \n{:?}", config);
+        driver.load_config(config);
     }
 
     // generator the ast tree and string.
