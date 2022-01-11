@@ -1,4 +1,4 @@
-use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema, Log};
+use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema, Log, AtlasConfig};
 
 fn main() {
     // get user config.
@@ -23,17 +23,25 @@ fn main() {
         let config_path = config_path.clone();
         let json = std::fs::read_to_string(config_path).unwrap();
         let config = serde_json::from_str::<CypherConfig>(&json).unwrap();
-        println!("Input basic config information: \n{:?}", config);
+        println!("\nInput basic config information: \n{:?}", config);
         driver.load_config(config);
+    }
+
+    if let Some(ref atlas_path) = config.atlas {
+        let atlas_path = atlas_path.clone();
+        let json = std::fs::read_to_string(atlas_path).unwrap();
+        let atlas = serde_json::from_str::<AtlasConfig>(&json).unwrap();
+        println!("Atlas Config Connection: \n{:?}", atlas);
+
     }
 
     // generator the ast tree and string.
     let cypher_ast = driver.execute();
-    println!("CypherAST:\n{:?}", cypher_ast);
+    // println!("CypherAST:\n{:?}", cypher_ast);
 
     // transform
     let cypher_string = driver.transfrom(Box::new(cypher_ast.clone()));
-    println!("CypherString:\n{}", cypher_string);
+    println!("\nCypherString:\n{}", cypher_string);
 
     // query number add 1
     driver.add_query();

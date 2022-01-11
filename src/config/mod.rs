@@ -16,6 +16,9 @@ $ cypher-smith --schema schema.json
 ## import schema and basic config.
 $ cypher-smith --schema schema.json --config config.json
 
+## import schema and atlas config.
+$ cypher-smith --schema schema.json --atlas atlas.json
+
 "#
 )]
 pub struct ArgsConfig {
@@ -23,6 +26,8 @@ pub struct ArgsConfig {
     pub schema: Option<PathBuf>,
     #[clap(short, long, value_name = "PATH", help = "basic config information")]
     pub config: Option<PathBuf>,
+    #[clap(short, long, value_name = "PATH", help = "basic config information")]
+    pub atlas: Option<PathBuf>,
 }
 
 impl Default for ArgsConfig {

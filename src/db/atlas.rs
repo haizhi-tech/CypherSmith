@@ -42,6 +42,20 @@ impl AtlasConnection {
             config,
         }
     }
+}
 
-    
+#[cfg(test)]
+mod tests {
+    use super::AtlasConfig;
+
+    #[test]
+    fn test_deserialize() {
+        let atlas_config = AtlasConfig {
+            address: "127.0.0.1:8080".parse().unwrap(),
+            username: "root".to_string(),
+            password: "root".to_string(),
+        };
+
+        println!("{:?}", atlas_config);
+    }
 }

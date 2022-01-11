@@ -3,6 +3,7 @@ use crate::{
     common::RandomGenerator,
     config::CypherConfig,
     meta::GraphSchema,
+    db::{AtlasConfig, AtlasConnection},
 };
 
 #[derive(Default)]
@@ -11,6 +12,7 @@ pub struct Driver {
     random: RandomGenerator,
     graph_schema: GraphSchema,
     cypher_config: CypherConfig,
+    atlas_connection: Option<AtlasConnection>,
 }
 
 impl Driver {
@@ -20,6 +22,7 @@ impl Driver {
             random: RandomGenerator::default(),
             graph_schema: GraphSchema::default(),
             cypher_config: CypherConfig::default(),
+            atlas_connection: None,
         }
     }
 
@@ -33,7 +36,14 @@ impl Driver {
         self.cypher_config.clone()
     }
 
-    // ast tree construct
+    /// Connect to AtlasGraph.
+    pub async fn load_atlas(&mut self, atlas: AtlasConfig) {
+        self.atlas_connection = Some(AtlasConnection::new(atlas).await);
+    }
+}
+
+impl Driver {
+    /// ast tree construct
     pub fn execute(&mut self) -> CypherNode {
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
         if self.cypher_config.call_query && self.random.d9() > 7 {
@@ -43,11 +53,13 @@ impl Driver {
         }
     }
 
-    // ast tree transfrom to cypher string.
+    /// ast tree transfrom to cypher string.
     pub fn transfrom(&self, cypher_node: Box<CypherNode>) -> String {
         let mut transformer = TransformVisitor::new();
         transformer.exec(cypher_node)
     }
+
+    
 
     pub fn add_query(&mut self) {
         self.queries += 1u32;
