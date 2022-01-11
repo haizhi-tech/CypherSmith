@@ -1,3 +1,7 @@
+Cargo.lock
+
+.cargo/config
+.cargo/config.toml
 /target
-/rpc/src/protos_code_gen/*.rs
-/rpc/target
+rpc/src/protos_code_gen/*.rs
+rpc/target

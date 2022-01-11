@@ -14,7 +14,7 @@ use std::path::PathBuf;
 $ cypher-smith --schema schema.json
 
 ## import schema and basic config.
-$ cypher-smith --schema schema.json --config config.serde_json
+$ cypher-smith --schema schema.json --config config.json
 
 "#
 )]
