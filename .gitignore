@@ -1,1 +1,3 @@
 /target
+/rpc/src/protos_code_gen/*.rs
+/rpc/target
