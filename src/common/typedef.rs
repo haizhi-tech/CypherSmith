@@ -72,7 +72,7 @@ impl Display for FieldValue {
                 Self::Double(d) => d.to_string(),
                 Self::Date(d) => d.to_string(), // should add duration from 1970 and to string
                 Self::Datetime(d) => d.to_string(),
-                Self::String(s) => s.to_string(),
+                Self::String(s) => "'".to_string() + s + "'",
             }
             .as_ref(),
         )

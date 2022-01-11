@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+// Client-oriented API. This is used generate end-user client code.
+package atlas;
+
+import "google/protobuf/empty.proto";
+
+// User related rpc
+message AuthenticateRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message AuthenticateResponse {
+    bytes session_id = 1;
+}
+
+message ExitRequest {
+    bytes session_id = 1;
+}
+
+message PingRequest {
+    bytes session_id = 1;
+}
+
+message VersionRequest {
+    bytes session_id = 1;
+}
+
+message VersionResponse {
+    string version = 1;
+}
+
+message ExecRequest {
+    bytes session_id = 1;
+    // cypher query statetment to execute
+    string statement = 2;
+}
+
+message ExecResponse {
+    // query result in JSON format
+    string result = 1;
+}
+
+service AtlasGraph {
+    /// The following APIs are [STABLE].
+    rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+    rpc Ping(PingRequest) returns (google.protobuf.Empty);
+    rpc Version(VersionRequest) returns (VersionResponse);
+    rpc Exec(ExecRequest) returns (ExecResponse);
+    rpc Exit(ExitRequest) returns (google.protobuf.Empty);
+}
