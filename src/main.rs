@@ -25,7 +25,7 @@ fn main() {
         });
 
     // generator the ast tree and string.
-    let cypher_ast = driver.execute();
+    let cypher_ast = driver.construct();
     // println!("CypherAST:\n{:?}", cypher_ast);
 
     // transform

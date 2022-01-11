@@ -6,6 +6,9 @@ use crate::{
     meta::GraphSchema,
 };
 
+use rpc::atlas::ExecRequest;
+use tonic::Request;
+
 #[derive(Default)]
 pub struct Driver {
     queries: u32,
@@ -43,7 +46,7 @@ impl Driver {
     }
 
     /// ast tree construct
-    pub fn execute(&mut self) -> CypherNode {
+    pub fn construct(&mut self) -> CypherNode {
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
         if self.cypher_config.call_query && self.random.d9() > 7 {
             ast_generator.call_query()
@@ -77,6 +80,7 @@ impl Driver {
             return Err("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage".to_string());
         }
 
+        // schema information
         if let Some(ref schema_path) = args_config.schema {
             let schema_path = schema_path.clone();
             let json = std::fs::read_to_string(schema_path).unwrap();
@@ -85,6 +89,7 @@ impl Driver {
             self.load_schema(schema);
         }
 
+        // basic config information
         if let Some(ref config_path) = args_config.config {
             let config_path = config_path.clone();
             let json = std::fs::read_to_string(config_path).unwrap();
@@ -93,12 +98,36 @@ impl Driver {
             self.load_config(config);
         }
 
+        // atlas information
         if let Some(ref atlas_path) = args_config.atlas {
             let atlas_path = atlas_path.clone();
             let json = std::fs::read_to_string(atlas_path).unwrap();
             let atlas = serde_json::from_str::<AtlasConfig>(&json).unwrap();
             println!("Atlas Config Connection: \n{:?}", atlas);
             self.load_atlas(atlas).await;
+        }
+
+        Ok(())
+    }
+
+    /// databse execution
+    pub async fn execute(&mut self) -> Result<(), String> {
+        if self.atlas_connection.is_some() {
+            let mut atlas_client = self.atlas_connection.as_ref().unwrap().client.clone();
+            let session_id = self.atlas_connection.as_ref().unwrap().session_id.clone();
+
+            //let session_id = self
+            let res = atlas_client
+                .exec(Request::new(ExecRequest {
+                    session_id: session_id.clone(),
+                    statement: "show vertex;".to_string(),
+                }))
+                .await
+                .unwrap()
+                .into_inner()
+                .result;
+
+            println!("\n{}", res);
         }
 
         Ok(())
