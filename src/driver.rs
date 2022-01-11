@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use crate::{
     ast::{CypherGenerator, CypherNode, TransformVisitor},
     common::RandomGenerator,
-    config::{ArgsConfig, CypherConfig},
+    config::CypherConfig,
     db::{AtlasConfig, AtlasConnection},
     meta::GraphSchema,
 };
@@ -29,12 +31,12 @@ impl Driver {
         }
     }
 
-    fn load_schema(&mut self, schema: GraphSchema) -> GraphSchema {
+    pub fn load_schema(&mut self, schema: GraphSchema) -> GraphSchema {
         self.graph_schema = schema;
         self.graph_schema.clone()
     }
 
-    fn load_config(&mut self, config: CypherConfig) -> CypherConfig {
+    pub fn load_config(&mut self, config: CypherConfig) -> CypherConfig {
         self.cypher_config = config;
         self.cypher_config.clone()
     }
@@ -69,43 +71,15 @@ impl Driver {
     pub fn print(&self) {}
 }
 
-impl Driver {}
-
 impl Driver {
     /// Load the Config.
     /// Return the result as a string.
-    pub async fn load(&mut self, args_config: ArgsConfig) -> Result<(), String> {
-        if args_config.schema.is_none() {
-            // eprintln!("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage");
-            return Err("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage".to_string());
-        }
-
-        // schema information
-        if let Some(ref schema_path) = args_config.schema {
-            let schema_path = schema_path.clone();
-            let json = std::fs::read_to_string(schema_path).unwrap();
-            let schema = serde_json::from_str::<GraphSchema>(&json).unwrap();
-            println!("Input schema information: \n{:?}", schema);
-            self.load_schema(schema);
-        }
-
-        // basic config information
-        if let Some(ref config_path) = args_config.config {
-            let config_path = config_path.clone();
-            let json = std::fs::read_to_string(config_path).unwrap();
-            let config = serde_json::from_str::<CypherConfig>(&json).unwrap();
-            println!("\nInput basic config information: \n{:?}", config);
-            self.load_config(config);
-        }
-
+    pub async fn load(&mut self, atlas_path: PathBuf) -> Result<(), String> {
         // atlas information
-        if let Some(ref atlas_path) = args_config.atlas {
-            let atlas_path = atlas_path.clone();
-            let json = std::fs::read_to_string(atlas_path).unwrap();
-            let atlas = serde_json::from_str::<AtlasConfig>(&json).unwrap();
-            println!("Atlas Config Connection: \n{:?}", atlas);
-            self.load_atlas(atlas).await;
-        }
+        let json = std::fs::read_to_string(atlas_path).unwrap();
+        let atlas = serde_json::from_str::<AtlasConfig>(&json).unwrap();
+        println!("Atlas Config Connection: \n{:?}", atlas);
+        self.load_atlas(atlas).await;
 
         Ok(())
     }
@@ -128,8 +102,9 @@ impl Driver {
                 .result;
 
             println!("\n{}", res);
+            return Ok(());
         }
 
-        Ok(())
+        Err("AtlasGraph not found.".to_string())
     }
 }
