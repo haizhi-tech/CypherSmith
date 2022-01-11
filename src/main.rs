@@ -14,6 +14,8 @@ fn main() {
 
     // load information.
     tokio::runtime::Builder::new_current_thread()
+        .enable_io()
+        .enable_time()
         .build()
         .unwrap()
         .block_on(async {
