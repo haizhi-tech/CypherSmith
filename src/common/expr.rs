@@ -366,7 +366,7 @@ impl Display for Expr {
                 let tail_str = if let Some(expr) = else_expression {
                     format!("\nELSE {}", expr)
                 } else {
-                    format!("")
+                    String::new()
                 };
                 f.write_fmt(format_args!(
                     "{} {} {} \nEND",

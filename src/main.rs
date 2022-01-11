@@ -1,8 +1,9 @@
-use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema, Log, AtlasConfig};
+use cypher_smith::{ArgsConfig, Driver, Log};
 
 fn main() {
     // get user config.
     let config = <ArgsConfig as clap::Parser>::parse();
+
     if config.schema.is_none() {
         eprintln!("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage");
         return;
@@ -11,29 +12,15 @@ fn main() {
     // get the label name and so on.
     let mut driver = Driver::new();
 
-    if let Some(ref schema_path) = config.schema {
-        let schema_path = schema_path.clone();
-        let json = std::fs::read_to_string(schema_path).unwrap();
-        let schema = serde_json::from_str::<GraphSchema>(&json).unwrap();
-        println!("Input schema information: \n{:?}", schema);
-        driver.load_schema(schema);
-    }
-
-    if let Some(ref config_path) = config.config {
-        let config_path = config_path.clone();
-        let json = std::fs::read_to_string(config_path).unwrap();
-        let config = serde_json::from_str::<CypherConfig>(&json).unwrap();
-        println!("\nInput basic config information: \n{:?}", config);
-        driver.load_config(config);
-    }
-
-    if let Some(ref atlas_path) = config.atlas {
-        let atlas_path = atlas_path.clone();
-        let json = std::fs::read_to_string(atlas_path).unwrap();
-        let atlas = serde_json::from_str::<AtlasConfig>(&json).unwrap();
-        println!("Atlas Config Connection: \n{:?}", atlas);
-
-    }
+    // load information.
+    tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(async {
+            if let Err(err) = driver.load(config).await {
+                eprintln!("{}", err);
+            }
+        });
 
     // generator the ast tree and string.
     let cypher_ast = driver.execute();

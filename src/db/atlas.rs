@@ -1,6 +1,6 @@
 use rpc::atlas::atlas_graph_client::AtlasGraphClient;
-use tonic::transport::Channel;
 use serde::{Deserialize, Serialize};
+use tonic::transport::Channel;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AtlasConfig {

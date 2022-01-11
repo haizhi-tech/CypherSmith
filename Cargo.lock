@@ -130,6 +130,7 @@ dependencies = [
  "rpc",
  "serde",
  "serde_json",
+ "tokio",
  "tonic",
 ]
 
