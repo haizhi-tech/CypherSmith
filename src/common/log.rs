@@ -27,7 +27,6 @@ impl Log {
     }
 
     // use to get the statistics information.
-    // todo:  cypher node need implement copy trait.
     pub fn execute(&mut self, cypher_ast: Box<CypherNode>) {
         let (all_nodes, max_level) = self.visit(cypher_ast);
         self.sum_nodes += all_nodes;
@@ -78,7 +77,6 @@ impl Log {
 }
 
 impl LogVisitor for Log {
-    // todo: need to implement error handle.
     // Output: (max_level, all_nodes)
     type Output = (u32, u32);
 
@@ -172,8 +170,9 @@ impl LogVisitor for Log {
         // process projection_body nodes
         self.get_single_info(projection_body, &mut with_nodes, &mut with_height);
 
-        // todo: expr process.
-        if where_clause.is_some() {}
+        if where_clause.is_some() {
+            with_nodes += 1;
+        }
 
         (with_nodes + 1, with_height + 1)
     }

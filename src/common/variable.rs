@@ -4,7 +4,6 @@ use super::{DataType, Diagnostic, Literal, RandomGenerator};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum DataKind {
-    // todo: more kind.
     Vertex,
     Edge,
     Path,
@@ -51,6 +50,7 @@ impl From<Literal> for DataKind {
             Literal::List(_) => DataKind::List,
             Literal::Map(_) => DataKind::Map,
             Literal::Null => DataKind::Null,
+            Literal::NullValue => DataKind::Null,
         }
     }
 }
@@ -103,7 +103,6 @@ impl VariableManager {
     }
 
     /// return a variable of the taeget type randomly.
-    /// todo: delete unwrap and add random select.
     pub fn random_target_variable(&mut self, target: DataKind) -> Result<Variable, Diagnostic> {
         let vars = self
             .types

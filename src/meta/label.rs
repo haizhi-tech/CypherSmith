@@ -49,20 +49,26 @@ impl Label {
     }
 
     /// get random property
-    pub fn random_property(&self, random: &mut RandomGenerator) -> Property {
-        let idx = random.under(self.properties.len() as _);
-        self.properties[idx as usize].clone()
+    pub fn random_property(&self, random: &mut RandomGenerator) -> Option<Property> {
+        let length = self.properties.len();
+        if length == 0 {
+            return None;
+        }
+        let idx = random.under(length as _);
+        Some(self.properties[idx as usize].clone())
     }
 
     /// get random properties without repeat.
     pub fn random_properties(&self, number: i32, random: &mut RandomGenerator) -> Vec<Property> {
-        if number <= 0 {
+        let length = self.properties.len() as i32;
+
+        if number <= 0 || length == 0 {
             return vec![];
         }
-        if number as usize > self.properties.len() {
+
+        if number > length {
             return self.properties.clone();
         }
-        let length = self.properties.len() as i32;
 
         (0..number)
             .into_iter()

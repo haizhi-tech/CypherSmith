@@ -259,7 +259,6 @@ impl ConvertVisitor for TransformVisitor {
     fn visit_order(&mut self, sort_items: Vec<(Expr, Option<String>)>) -> Self::Output {
         let mut query_string = "ORDER BY ".to_string();
 
-        // todo: return error.
         if sort_items.is_empty() {
             unreachable!()
         }
@@ -368,7 +367,6 @@ impl ConvertVisitor for TransformVisitor {
             "DELETE ".to_string()
         };
 
-        // todo: error handle
         if expressions.is_empty() {
             unreachable!()
         }
@@ -563,7 +561,6 @@ impl ConvertVisitor for TransformVisitor {
     fn visit_pattern(&mut self, pattern_parts: Vec<Box<CypherNode>>) -> Self::Output {
         let mut query_string = String::new();
 
-        // todo: error handle.
         if pattern_parts.is_empty() {
             unreachable!()
         }
@@ -592,7 +589,6 @@ impl ConvertVisitor for TransformVisitor {
     ) -> Self::Output {
         let mut query_string = String::new();
 
-        // todo: need to construct variable.
         if let Some(var) = var {
             query_string += &var.get_name();
             query_string += "=";
@@ -691,7 +687,6 @@ impl ConvertVisitor for TransformVisitor {
             query_string += &var.get_name();
         }
 
-        // todo: error handle.
         if edge_labels.is_empty() {
             unreachable!()
         }

@@ -233,20 +233,20 @@ cypher_nodes_impl! {
 
     /// ExplicitProcedureInvocation
     ExplicitProcedureInvocation {
-        // todo: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
+        // TODO: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
         expressions: Vec<Expr>,
     },
 
     /// ImplicitProcedureInvocation
     ImplicitProcedureInvocation {
-        // todo: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
+        // TODO: need to implementation NameSpace.SymbolicName eg: atlas.shortestpath()
         procedure_name: (NameSpace, Variable),
     },
 
     /// YieldItems
     YieldItems {
-        // todo: need to modify ProecdureResultField result.
+        // TODO: need to modify ProecdureResultField result.
         yield_items: Vec<(Option<Variable>, Variable)>,
         where_clause: Option<Expr>,
     },

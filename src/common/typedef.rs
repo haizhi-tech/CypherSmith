@@ -53,7 +53,6 @@ impl Default for FieldValue {
     }
 }
 
-/// Todo: print date/datetime to String format
 impl Display for FieldValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(
@@ -87,9 +86,6 @@ pub struct Property {
     pub is_pk: bool,
     pub nullable: bool,
     pub is_delete: bool,
-    // is_vertex: bool,
-    // is_index: bool,
-    // is_unique: bool,
 }
 
 impl Property {

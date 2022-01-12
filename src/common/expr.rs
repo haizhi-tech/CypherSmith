@@ -72,6 +72,7 @@ impl ExprKind {
                 | BinOpKind::In => DataKind::Boolean,
                 BinOpKind::Index => expr.kind.get_kind(),
                 BinOpKind::Pipe => DataKind::Pipe,
+                BinOpKind::Range => DataKind::List,
             },
             ExprKind::UnOp(kind, expr) => match kind {
                 UnOpKind::Pos | UnOpKind::Neg => expr.kind.get_kind(),
@@ -129,6 +130,8 @@ pub enum BinOpKind {
     EndsWith,
     /// The `|` Operator
     Pipe,
+    /// The '...' Operator
+    Range,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -267,6 +270,7 @@ pub enum Literal {
     Boolean(bool),
     List(Vec<Expr>),
     Map(Vec<(String, Expr)>),
+    NullValue,
     Null,
 }
 
@@ -292,6 +296,7 @@ impl Display for Literal {
                 f.write_fmt(format_args!("{{{}}}", items.join(", ")))
             }
             Literal::Null => f.write_str("NULL"),
+            Literal::NullValue => f.write_str(""),
         }
     }
 }
@@ -326,6 +331,7 @@ impl Display for Expr {
                 BinOpKind::StartsWith => f.write_fmt(format_args!("{} STARTS WITH {}", lhs, rhs)),
                 BinOpKind::EndsWith => f.write_fmt(format_args!("{} ENDS WITH {}", lhs, rhs)),
                 BinOpKind::Pipe => f.write_fmt(format_args!("{} | {}", lhs, rhs)),
+                BinOpKind::Range => f.write_fmt(format_args!("{}..{}", lhs, rhs)),
             },
             ExprKind::UnOp(kind, expr) => match kind {
                 UnOpKind::Pos => f.write_fmt(format_args!("+{}", expr)),
@@ -495,15 +501,29 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn test_property_display() {
-    // let l_val = Expr {
-    //     kind: ExprKind::Variable("a".to_string()),
-    //     span: Span(0, 0),
-    // };
-    // let expr = Expr {
-    //     kind: ExprKind::Property(Box::new(l_val), "prop".to_string()),
-    // };
-    // assert_eq!(format!("{}", expr), "a.prop".to_string());
-    // }
+    #[test]
+    fn test_pipe_range_display() {
+        let ops = vec![
+            BinOpKind::Pipe,
+            BinOpKind::Range,
+        ];
+        let results = vec![
+            "a | b",
+            "a..b"
+        ];
+
+        for (op, res) in ops.iter().zip(results.iter()) {
+            let l_val = Expr {
+                kind: ExprKind::Variable(Variable::new("a".to_string())),
+            };
+            let r_val = Expr {
+                kind: ExprKind::Variable(Variable::new("b".to_string())),
+            };
+            let expr = Expr {
+                kind: ExprKind::BinOp(*op, Box::new(l_val), Box::new(r_val)),
+            };
+            assert_eq!(format!("{}", expr), res.to_string());
+        }
+        
+    }
 }

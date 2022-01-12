@@ -74,9 +74,26 @@ impl ExprGenerator<'_> {
         kinds[self.random.d2() as usize % 2]
     }
 
-    // todo: need implement
+    // Random Literal Gen.
     pub fn random_literal(&mut self) -> Literal {
-        Literal::Integer(1)
+        if self.random.bool() {
+            Literal::Integer(self.random.under(5) as u64)
+        } else if self.random.bool() {
+            Literal::Boolean(self.random.bool())
+        } else if self.random.bool() {
+            Literal::Double(self.random.under(5) as f64)
+        } else if self.random.d6() == 1 {
+            Literal::String(self.random.under(5).to_string())
+        } else if self.random.d12() == 1 {
+            let expr = Expr::from(ExprKind::Lit(Literal::Integer(self.random.under(5) as u64)));
+            Literal::List(vec![expr])
+        } else if self.random.d20() == 1 {
+            let random_number = self.random.under(5) as u64;
+            let expr = Expr::from(ExprKind::Lit(Literal::Integer(random_number)));
+            Literal::Map(vec![(random_number.to_string(), expr)])
+        } else {
+            Literal::Null
+        }
     }
 
     pub fn random_predicate_function_kind(&mut self) -> PredicateFunctionKind {
@@ -292,44 +309,93 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
         let mut query_expr = self.visit_property_or_labels_expression();
 
         // expr loop
-        while self.random.d20() == 1 {
-            if (self.complexity < self.limit) && (self.random.d6() == 1) {
-                // StringOperatorExpression
-                self.complexity += 1;
-                let string_expr = self.visit_property_or_labels_expression();
-                let kind = ExprKind::BinOp(
-                    self.random_string_kind(),
-                    Box::new(query_expr),
-                    Box::new(string_expr),
-                );
-                query_expr = Expr::from(kind);
-            } else if (self.complexity < self.limit) && (self.random.d6() == 1) {
-                // ListOperatorExpression: In | [Expression] | [Expression..Expression]
-                if self.random.d6() > 2 {
-                    // In PropertyOrLabelsExpression
+        for _ in 0..self.random.under(3) {
+            if self.random.d20() == 1 {
+                if (self.complexity < self.limit) && (self.random.d6() == 1) {
+                    // StringOperatorExpression
                     self.complexity += 1;
-                    let list_expr = self.visit_property_or_labels_expression();
-                    let kind =
-                        ExprKind::BinOp(BinOpKind::In, Box::new(query_expr), Box::new(list_expr));
-                    query_expr = Expr::from(kind);
-                } else if self.random.d6() == 1 {
-                    // [Expression]
-                    self.complexity += 1;
-                    let list_expr = self.visit();
+                    let string_expr = self.visit_property_or_labels_expression();
                     let kind = ExprKind::BinOp(
-                        BinOpKind::Index,
+                        self.random_string_kind(),
                         Box::new(query_expr),
-                        Box::new(list_expr),
+                        Box::new(string_expr),
                     );
                     query_expr = Expr::from(kind);
-                } else if self.random.d6() == 1 {
-                    // todo: [(Expression)?..(Expression)?]
+                } else if (self.complexity < self.limit) && (self.random.d6() == 1) {
+                    // ListOperatorExpression: In | [Expression] | [Expression..Expression]
+                    if self.random.d6() > 2 {
+                        // In PropertyOrLabelsExpression
+                        self.complexity += 1;
+                        let list_expr = self.visit_property_or_labels_expression();
+                        let kind = ExprKind::BinOp(
+                            BinOpKind::In,
+                            Box::new(query_expr),
+                            Box::new(list_expr),
+                        );
+                        query_expr = Expr::from(kind);
+                    } else if self.random.d6() == 1 {
+                        // [Expression]
+                        self.complexity += 1;
+                        let list_expr = self.visit();
+                        let kind = ExprKind::BinOp(
+                            BinOpKind::Index,
+                            Box::new(query_expr),
+                            Box::new(list_expr),
+                        );
+                        query_expr = Expr::from(kind);
+                    } else if self.random.d12() == 1 {
+                        // [(Expression)?..(Expression)?]
+                        self.complexity += 1;
+                        let (start_expr, end_expr) = if self.random.bool() {
+                            let start_number = self.random.d2();
+                            if self.random.bool() {
+                                let end_number = start_number + self.random.d6();
+                                (
+                                    Expr::from(ExprKind::Lit(Literal::Integer(
+                                        start_number as u64,
+                                    ))),
+                                    Expr::from(ExprKind::Lit(Literal::Integer(end_number as u64))),
+                                )
+                            } else {
+                                (
+                                    Expr::from(ExprKind::Lit(Literal::Integer(
+                                        start_number as u64,
+                                    ))),
+                                    Expr::from(ExprKind::Lit(Literal::NullValue)),
+                                )
+                            }
+                        } else if self.random.bool() {
+                            let end_number = self.random.d6();
+                            (
+                                Expr::from(ExprKind::Lit(Literal::NullValue)),
+                                Expr::from(ExprKind::Lit(Literal::Integer(end_number as u64))),
+                            )
+                        } else {
+                            (
+                                Expr::from(ExprKind::Lit(Literal::NullValue)),
+                                Expr::from(ExprKind::Lit(Literal::NullValue)),
+                            )
+                        };
+
+                        let list_expr = Expr::from(ExprKind::BinOp(
+                            BinOpKind::Range,
+                            Box::new(start_expr),
+                            Box::new(end_expr),
+                        ));
+
+                        let kind = ExprKind::BinOp(
+                            BinOpKind::Index,
+                            Box::new(query_expr),
+                            Box::new(list_expr),
+                        );
+                        query_expr = Expr::from(kind);
+                    }
+                } else if (self.complexity < self.limit) && (self.random.d6() == 1) {
+                    // NullOperatorExpression
+                    self.complexity += 1;
+                    let kind = ExprKind::UnOp(self.random_null_kind(), Box::new(query_expr));
+                    query_expr = Expr::from(kind);
                 }
-            } else if (self.complexity < self.limit) && (self.random.d6() == 1) {
-                // NullOperatorExpression
-                self.complexity += 1;
-                let kind = ExprKind::UnOp(self.random_null_kind(), Box::new(query_expr));
-                query_expr = Expr::from(kind);
             }
         }
 
@@ -357,7 +423,9 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                         .cypher
                         .graph_schema
                         .random_vertex_property(&mut self.random);
-                    query_expr = Expr::from(ExprKind::Property(Box::new(query_expr), property));
+                    if let Some(prop) = property {
+                        query_expr = Expr::from(ExprKind::Property(Box::new(query_expr), prop));
+                    }
                 }
             }
         } else if (self.complexity < self.limit)
@@ -511,13 +579,11 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 let expression = self.visit();
                 Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
             }
-            // FunctionInvocation: FunctionName ( (DISTINCT)? Expression*)
-            // FunctionInvocation not implement.
+            // TODO: FunctionInvocation: FunctionName ( (DISTINCT)? Expression*)
             // 8 => {
             //     self.complexity += 1;
 
             //     // FunctionName: Namespace.SymbolicName
-            //     // todo: need to implement NameSpace and SymbolicName
             //     let function = Expr::from(ExprKind::Lit(Literal::String(
             //         "atlas.shortestpath".to_string(),
             //     )));

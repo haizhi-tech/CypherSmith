@@ -43,10 +43,9 @@ impl GraphSchema {
 }
 
 impl GraphSchema {
-    // todo: add error handling.
+    /// Get Vertex Label.
     pub fn rand_vertex_label(&self, random: &mut RandomGenerator) -> Label {
         let length = self.vertex_labels.len();
-        // todo: return error.
         if length == 0 {
             unreachable!()
         }
@@ -54,17 +53,23 @@ impl GraphSchema {
         self.vertex_labels[idx as usize].clone()
     }
 
+    /// Get Edge Label.
     pub fn rand_edge_label(&self, random: &mut RandomGenerator) -> Label {
-        let idx = random.under(self.edge_labels.len() as _);
+        let length = self.edge_labels.len();
+        if length == 0 {
+            unreachable!()
+        }
+        let idx = random.under(length as _);
         self.edge_labels[idx as usize].clone()
     }
 
-    pub fn random_vertex_property(&self, random: &mut RandomGenerator) -> Property {
+    /// Get Vertex Property.
+    pub fn random_vertex_property(&self, random: &mut RandomGenerator) -> Option<Property> {
         let vertex_label = self.rand_vertex_label(random);
         vertex_label.random_property(random)
     }
 
-    pub fn random_edge_property(&self, random: &mut RandomGenerator) -> Property {
+    pub fn random_edge_property(&self, random: &mut RandomGenerator) -> Option<Property> {
         let edge_label = self.rand_edge_label(random);
         edge_label.random_property(random)
     }
