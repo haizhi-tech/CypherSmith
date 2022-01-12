@@ -503,14 +503,8 @@ mod tests {
 
     #[test]
     fn test_pipe_range_display() {
-        let ops = vec![
-            BinOpKind::Pipe,
-            BinOpKind::Range,
-        ];
-        let results = vec![
-            "a | b",
-            "a..b"
-        ];
+        let ops = vec![BinOpKind::Pipe, BinOpKind::Range];
+        let results = vec!["a | b", "a..b"];
 
         for (op, res) in ops.iter().zip(results.iter()) {
             let l_val = Expr {
@@ -524,6 +518,5 @@ mod tests {
             };
             assert_eq!(format!("{}", expr), res.to_string());
         }
-        
     }
 }

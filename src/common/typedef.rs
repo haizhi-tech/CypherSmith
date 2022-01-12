@@ -1,6 +1,6 @@
-use std::fmt::{self, Display};
-
+use super::RandomGenerator;
 use serde::{Deserialize, Serialize};
+use std::fmt::{self, Display};
 
 pub type LabelId = u16;
 pub type PropertyId = u16;
@@ -32,17 +32,19 @@ pub enum FieldValue {
 }
 
 impl FieldValue {
+    /// Random Generate Default Value.
     pub fn get_default_value(d_type: DataType) -> FieldValue {
+        let mut random = RandomGenerator::new();
         match d_type {
             DataType::Null => Self::Null,
-            DataType::Bool => Self::Boolean(false),
-            DataType::Int32 => Self::Int32(1),
-            DataType::Int64 => Self::Int64(1),
-            DataType::Float => Self::Float(1.0),
-            DataType::Double => Self::Double(1.0),
+            DataType::Bool => Self::Boolean(random.bool()),
+            DataType::Int32 => Self::Int32(random.d6()),
+            DataType::Int64 => Self::Int64(random.d6() as _),
+            DataType::Float => Self::Float(random.d6() as _),
+            DataType::Double => Self::Double(random.d6() as _),
             DataType::Date => Self::Date(0),
             DataType::Datetime => Self::Datetime(0),
-            DataType::String => Self::String("Alice(deault)".to_string()),
+            DataType::String => Self::String(random.d6().to_string()),
         }
     }
 }
@@ -96,8 +98,6 @@ impl Property {
     pub fn default_value(&self) -> FieldValue {
         FieldValue::get_default_value(self.prop_type)
     }
-
-    // todo: random value generator.
 }
 
 impl Display for Property {
