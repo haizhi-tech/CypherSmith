@@ -363,19 +363,19 @@ impl Display for Expr {
                     .iter()
                     .map(|case_alternative| {
                         format!(
-                            "\n WHEN {} THEN {}",
+                            " WHEN {} THEN {}",
                             case_alternative.condition, case_alternative.value
                         )
                     })
                     .collect::<Vec<String>>()
                     .join("");
                 let tail_str = if let Some(expr) = else_expression {
-                    format!("\nELSE {}", expr)
+                    format!(" ELSE {}", expr)
                 } else {
                     String::new()
                 };
                 f.write_fmt(format_args!(
-                    "{} {} {} \nEND",
+                    "{} {} {} END",
                     &head_str, &middle_str, &tail_str
                 ))
             }

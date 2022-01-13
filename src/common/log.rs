@@ -8,7 +8,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct Log {
-    // queries: u32,
+    queries: u32,
     sum_height: u32,
     sum_nodes: u32,
 }
@@ -16,7 +16,7 @@ pub struct Log {
 impl Log {
     pub fn new() -> Self {
         Log {
-            // queries: 0,
+            queries: 0,
             sum_height: 0,
             sum_nodes: 0,
         }
@@ -28,6 +28,7 @@ impl Log {
 
     // use to get the statistics information.
     pub fn execute(&mut self, cypher_ast: Box<CypherNode>) {
+        self.queries += 1;
         let (all_nodes, max_level) = self.visit(cypher_ast);
         self.sum_nodes += all_nodes;
         self.sum_height += max_level;
@@ -36,8 +37,8 @@ impl Log {
     // report current cyphersmith condition.
     pub fn report(&self) {
         println!(
-            "\nAST tree information:\nSUM_NODES: {},\nheight: {}",
-            self.sum_nodes, self.sum_height
+            "\nAST tree information:\nAVERAGE_NODES: {},\nAVERAGE_HEIGHT: {}",
+            self.sum_nodes/self.queries, self.sum_height/self.queries
         );
     }
 

@@ -30,7 +30,7 @@ fn main() {
         driver.load_config(config);
     }
 
-    // load information.
+    // Load AtlasGraph Information.
     if let Some(ref atlas_path) = config.atlas {
         let atlas_path = atlas_path.clone();
         tokio::runtime::Builder::new_current_thread()

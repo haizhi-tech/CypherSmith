@@ -670,8 +670,6 @@ impl ConvertVisitor for TransformVisitor {
     }
 
     /// ### RelationShipPattern
-    ///
-    ///
     fn visit_relationship_pattern(
         &mut self,
         direction: RelationshipDirection,
@@ -687,9 +685,6 @@ impl ConvertVisitor for TransformVisitor {
             query_string += &var.get_name();
         }
 
-        if edge_labels.is_empty() {
-            unreachable!()
-        }
         let labels_string = edge_labels
             .into_iter()
             .map(|label| label.get_name())

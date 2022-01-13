@@ -1,3 +1,7 @@
 {
-    "call_query": false
+    "call_query": false,
+    "max_queries": 10,
+    "dry_run": true,
+    "verbose": "../tmp",
+    "dump_all_graphs": false
 }

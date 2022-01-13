@@ -10,14 +10,11 @@ use std::path::PathBuf;
     author = "AtlasGraph Authors",
     after_help = r#"# Examples
 
-## import schema
-$ cypher-smith --schema schema.json
-
 ## import schema and basic config.
 $ cypher-smith --schema schema.json --config config.json
 
 ## import schema and atlas config.
-$ cypher-smith --schema schema.json --atlas atlas.json
+$ cypher-smith --schema schema.json --config config.json --atlas atlas.json
 
 "#
 )]
@@ -36,16 +33,42 @@ impl Default for ArgsConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CypherConfig {
     // StandaloneCall
     pub call_query: bool,
+    pub max_queries: u32,
+    pub dry_run: bool,
+    pub verbose: Option<String>,
+    pub dump_all_graphs: bool,
 }
 
-// impl Default for CypherConfig {
-//     fn default() -> Self {
-//         CypherConfig {
-//             call_query: false,
-//         }
-//     }
-// }
+impl Default for CypherConfig {
+    fn default() -> Self {
+        CypherConfig {
+            call_query: false,
+            max_queries: 100,
+            dry_run: true,
+            verbose: None,
+            dump_all_graphs: false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CypherConfig;
+
+    #[test]
+    fn test_deserialize() {
+        let cypher_config = CypherConfig {
+            call_query: false,
+            max_queries: 100,
+            dry_run: true,
+            verbose: Some("test".to_string()),
+            dump_all_graphs: false,
+        };
+
+        println!("{:?}", cypher_config);
+    }
+}

@@ -2,12 +2,12 @@ use std::path::PathBuf;
 
 use crate::{
     ast::{CypherGenerator, CypherNode, TransformVisitor},
-    common::RandomGenerator,
+    common::{Log, RandomGenerator, OutputWriter},
     config::CypherConfig,
     db::{AtlasConfig, AtlasConnection},
     meta::GraphSchema,
 };
-
+use serde_json::Value;
 use rpc::atlas::ExecRequest;
 use tonic::Request;
 
@@ -47,6 +47,9 @@ impl Driver {
         println!("\nConnect Success!\n");
     }
 
+}
+
+impl Driver {
     /// ast tree construct
     pub fn construct(&mut self) -> CypherNode {
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
@@ -86,25 +89,77 @@ impl Driver {
 
     /// databse execution
     pub async fn execute(&mut self) -> Result<(), String> {
-        if self.atlas_connection.is_some() {
-            let mut atlas_client = self.atlas_connection.as_ref().unwrap().client.clone();
-            let session_id = self.atlas_connection.as_ref().unwrap().session_id.clone();
+        // log_record recording intermediate information
+        let mut log_record = Log::new();
 
-            //let session_id = self
-            let res = atlas_client
-                .exec(Request::new(ExecRequest {
-                    session_id: session_id.clone(),
-                    statement: "show vertex;".to_string(),
-                }))
-                .await
-                .unwrap()
-                .into_inner()
-                .result;
+        
 
-            println!("\n{}", res);
-            return Ok(());
+        let mut results = Vec::new();
+
+        // while current queries < max_queries.
+        while self.queries < self.cypher_config.max_queries {
+            // generator the ast tree and string.
+            let cypher_ast = self.construct();
+
+            // transform ast tree to string.
+            let cypher_string = self.transfrom(Box::new(cypher_ast.clone()));
+            
+
+            // print queries instead of executing them
+            if  self.cypher_config.dry_run {
+                println!("CypherString:\n{}", cypher_string);
+            }
+
+            // dump generated ASTs for debugging.
+            if self.cypher_config.dump_all_graphs {
+                println!("CypherAST:\n{:?}", cypher_ast);
+            }
+            
+            log_record.execute(Box::new(cypher_ast));
+
+            // query number add 1
+            self.queries += 1;
+
+            // if connect to AtlasGraph
+            if self.atlas_connection.is_some() {
+                let mut atlas_client = self.atlas_connection.as_ref().unwrap().client.clone();
+                let session_id = self.atlas_connection.as_ref().unwrap().session_id.clone();
+
+                // if self.cypher_config
+
+                //let session_id = self
+                let res = atlas_client
+                    .exec(Request::new(ExecRequest {
+                        session_id: session_id.clone(),
+                        statement: cypher_string.clone(),
+                    }))
+                    .await
+                    .unwrap()
+                    .into_inner()
+                    .result;
+
+                // println!("\n{}", res);
+
+                let mut v: Value = serde_json::from_str(res.as_str()).unwrap();
+                let errors = v["errors"].take();
+                let record = serde_json::from_value::<Vec<String>>(errors).unwrap();
+                if !record.is_empty() {
+                    results.push((cypher_string, record));
+                }
+            }
         }
 
-        Err("AtlasGraph not found.".to_string())
+        // verbose
+        if let Some(path) = &self.cypher_config.verbose {
+            let mut output = OutputWriter::new(path.to_string());
+            for (cypher, errors) in results {
+                output.write_errors(cypher, errors);
+            }
+        }
+        
+        // print report.
+        log_record.report();
+
+        Ok(())
     }
 }
