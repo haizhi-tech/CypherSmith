@@ -39,6 +39,7 @@ pub struct CypherConfig {
     pub call_query: bool,
     pub max_queries: u32,
     pub dry_run: bool,
+    pub dry_run_path: Option<String>,
     pub verbose: Option<String>,
     pub dump_all_graphs: bool,
 }
@@ -49,6 +50,7 @@ impl Default for CypherConfig {
             call_query: false,
             max_queries: 100,
             dry_run: true,
+            dry_run_path: None,
             verbose: None,
             dump_all_graphs: false,
         }
@@ -65,6 +67,7 @@ mod tests {
             call_query: false,
             max_queries: 100,
             dry_run: true,
+            dry_run_path: Some("test".to_string()),
             verbose: Some("test".to_string()),
             dump_all_graphs: false,
         };

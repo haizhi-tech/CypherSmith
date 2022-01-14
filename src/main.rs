@@ -31,23 +31,23 @@ fn main() {
     }
 
     // Load AtlasGraph Information.
-    if let Some(ref atlas_path) = config.atlas {
-        let atlas_path = atlas_path.clone();
-        tokio::runtime::Builder::new_current_thread()
-            .enable_io()
-            .enable_time()
-            .build()
-            .unwrap()
-            .block_on(async {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_io()
+        .enable_time()
+        .build()
+        .unwrap()
+        .block_on(async {
+            if let Some(ref atlas_path) = config.atlas {
+                let atlas_path = atlas_path.clone();
                 if let Err(err) = driver.load(atlas_path).await {
                     eprintln!("{}", err);
                     return;
                 }
-                if let Err(err) = driver.execute().await {
-                    eprintln!("{}", err);
-                }
-            });
-    }
+            }
+            if let Err(err) = driver.execute().await {
+                eprintln!("{}", err);
+            }
+        });
 
     // // generator the ast tree and string.
     // let cypher_ast = driver.construct();

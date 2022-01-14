@@ -103,6 +103,7 @@ impl Driver {
         // log_record recording intermediate information
         let mut log_record = Log::new();
 
+        let mut cypher = Vec::new();
         let mut results = Vec::new();
 
         // while current queries < max_queries.
@@ -116,6 +117,7 @@ impl Driver {
             // print queries instead of executing them
             if self.cypher_config.dry_run {
                 println!("CypherString:\n{}", cypher_string);
+                cypher.push(cypher_string.clone());
             }
 
             // dump generated ASTs for debugging.
@@ -161,6 +163,14 @@ impl Driver {
             let mut output = OutputWriter::new(path.to_string());
             for (cypher, errors) in results {
                 output.write_errors(cypher, errors);
+            }
+        }
+
+        // dry_run path.
+        if let Some(path) = &self.cypher_config.dry_run_path {
+            let mut output = OutputWriter::new(path.to_string());
+            for single_cypher in cypher {
+                output.write_cypher(single_cypher);
             }
         }
 

@@ -3,6 +3,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Serialize, Deserialize)]
+struct Cypher {
+    cypher: String,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Error {
     detail: String,
     level: String,
@@ -32,6 +37,15 @@ impl OutputWriter {
         let errors = serde_json::to_string(&err).unwrap();
 
         let record = Errors { cypher, errors };
+
+        // the header row written automatic
+        self.file.serialize(record).unwrap();
+    }
+
+    // record all cypher
+    // TODO: Record ALL errors.
+    pub fn write_cypher(&mut self, cypher: String) {
+        let record = Cypher { cypher };
 
         // the header row written automatic
         self.file.serialize(record).unwrap();
