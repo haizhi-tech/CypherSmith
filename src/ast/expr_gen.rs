@@ -488,7 +488,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 )))
             }
             // COUNT (*)
-            14..=20 => Ok(Expr::from(ExprKind::Lit(Literal::String(
+            14..=17 => Ok(Expr::from(ExprKind::Lit(Literal::String(
                 "COUNT (*)".to_string(),
             )))),
             // ListComprehension: [FilterExpression (|Expression)? ]
@@ -611,7 +611,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             //     ))
             // }
             // ExistentialSubquery
-            46..=49 => {
+            66..=67 => {
                 self.complexity += 1;
 
                 // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
