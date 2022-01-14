@@ -158,10 +158,13 @@ impl VariableGenerator {
         var
     }
 
-    pub fn get_old_variable(&mut self) -> Variable {
+    pub fn get_old_variable(&mut self) -> Result<Variable, Diagnostic> {
+        if self.number == 0 {
+            return Diagnostic::error("variable out of range.", None);
+        }
         let mut random = RandomGenerator::new();
-        let old_number = random.d100() % ((self.number + 1) as i32);
-        Variable::new(self.name.clone() + &old_number.to_string())
+        let old_number = random.d100() % (self.number as i32);
+        Ok(Variable::new(self.name.clone() + &old_number.to_string()))
     }
 
     /// get target datakind variable

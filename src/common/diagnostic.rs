@@ -45,9 +45,9 @@ impl Diagnostic {
         Diagnostic::new(Level::Warn, message, detail)
     }
 
-    // pub fn error(message: impl ToString, detail: impl Into<Option<String>>) -> Self {
-    //     Diagnostic::new(Level::Error, message, detail)
-    // }
+    pub fn error(message: impl ToString, detail: impl Into<Option<String>>) -> Self {
+        Diagnostic::new(Level::Error, message, detail)
+    }
 
     pub fn bug(message: impl ToString, detail: impl Into<Option<String>>) -> Self {
         Diagnostic::new(Level::Bug, message, detail)

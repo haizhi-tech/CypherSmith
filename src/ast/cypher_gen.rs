@@ -152,7 +152,10 @@ impl CypherNodeVisitor for CypherGenerator {
     }
 
     fn visit_union(&mut self) -> Self::Output {
-        let is_all = self.random.bool();
+        let is_all = self.random.d6() == 1;
+        
+        // UNION: new Variable Manager.
+        self.variables = VariableGenerator::new();
 
         let sub_query = self.visit_single_query();
 
