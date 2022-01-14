@@ -121,6 +121,7 @@ impl VariableManager {
 pub struct VariableGenerator {
     name: String,
     number: u32,
+    t_number: u32,
     manager: VariableManager,
 }
 
@@ -129,6 +130,7 @@ impl VariableGenerator {
         VariableGenerator {
             name: "v".to_string(),
             number: 0u32,
+            t_number: 0u32,
             manager: VariableManager::default(),
         }
     }
@@ -146,6 +148,13 @@ impl VariableGenerator {
         let var = Variable::new_var(var_name.clone(), kind.clone());
         self.manager.add_variable(var_name, kind);
         self.number += 1u32;
+        var
+    }
+
+    /// new tmp Variable
+    pub fn new_tmp_variable(&mut self) -> Variable {
+        let var = Variable::new("t".to_string() + &self.t_number.to_string());
+        self.t_number += 1u32;
         var
     }
 

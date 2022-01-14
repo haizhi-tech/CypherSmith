@@ -487,10 +487,8 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 self.complexity += 1;
 
                 let in_expression = self.visit();
-                let var = self
-                    .cypher
-                    .variables
-                    .new_kind_variable(in_expression.kind.get_kind());
+                let var = self.cypher.variables.new_tmp_variable();
+                //.new_kind_variable(in_expression.kind.get_kind());
                 let in_expr = Box::new(in_expression);
                 let where_expr = if self.random.d12() == 1 {
                     Some(Box::new(self.visit()))
@@ -543,10 +541,8 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 self.complexity += 1;
 
                 let in_expression = self.visit();
-                let var = self
-                    .cypher
-                    .variables
-                    .new_kind_variable(in_expression.kind.get_kind());
+                let var = self.cypher.variables.new_tmp_variable();
+                // .new_kind_variable(in_expression.kind.get_kind());
                 let in_expr = Box::new(in_expression);
                 let where_expr = if self.random.d12() == 1 {
                     Some(Box::new(self.visit()))
