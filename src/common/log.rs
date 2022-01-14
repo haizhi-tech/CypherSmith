@@ -38,7 +38,8 @@ impl Log {
     pub fn report(&self) {
         println!(
             "\nAST tree information:\nAVERAGE_NODES: {},\nAVERAGE_HEIGHT: {}",
-            self.sum_nodes/self.queries, self.sum_height/self.queries
+            self.sum_nodes / self.queries,
+            self.sum_height / self.queries
         );
     }
 

@@ -1,11 +1,11 @@
-use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema, Log};
+use cypher_smith::{ArgsConfig, CypherConfig, Driver, GraphSchema};
 
 fn main() {
     // get user config.
     let config = <ArgsConfig as clap::Parser>::parse();
 
-    if config.schema.is_none() {
-        eprintln!("[WARNING] Please provide schema information!\n\tuse `cypher_smith --help` to find out example usage");
+    if config.schema.is_none() || config.config.is_none() {
+        eprintln!("[WARNING] Please provide schema and basic config information!\n\tuse `cypher_smith --help` to find out example usage");
         return;
     }
 
@@ -49,20 +49,20 @@ fn main() {
             });
     }
 
-    // generator the ast tree and string.
-    let cypher_ast = driver.construct();
-    // println!("CypherAST:\n{:?}", cypher_ast);
+    // // generator the ast tree and string.
+    // let cypher_ast = driver.construct();
+    // // println!("CypherAST:\n{:?}", cypher_ast);
 
-    // transform
-    let cypher_string = driver.transfrom(Box::new(cypher_ast.clone()));
-    println!("\nCypherString:\n{}", cypher_string);
+    // // transform
+    // let cypher_string = driver.transfrom(Box::new(cypher_ast.clone()));
+    // println!("\nCypherString:\n{}", cypher_string);
 
-    // query number add 1
-    driver.add_query();
+    // // query number add 1
+    // driver.add_query();
 
-    // log_record recording intermediate information
-    let mut log_record = Log::new();
-    log_record.execute(Box::new(cypher_ast));
+    // // log_record recording intermediate information
+    // let mut log_record = Log::new();
+    // log_record.execute(Box::new(cypher_ast));
 
-    log_record.report();
+    // log_record.report();
 }

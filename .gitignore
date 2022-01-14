@@ -3,5 +3,6 @@ Cargo.lock
 .cargo/config
 .cargo/config.toml
 /target
+/report
 rpc/src/protos_code_gen/*.rs
 rpc/target

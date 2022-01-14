@@ -599,7 +599,7 @@ impl CypherNodeVisitor for CypherGenerator {
 
     fn visit_projection_body(&mut self) -> Self::Output {
         // DISTINCT
-        let is_distinct = self.random.bool();
+        let is_distinct = self.random.d6() == 1;
 
         // ProjectionItems
         let projection_items_node = self.visit_projection_items();
@@ -638,7 +638,7 @@ impl CypherNodeVisitor for CypherGenerator {
     /// ProjectionItems: *(,ProjectionItem)*|ProjectionItem+
     fn visit_projection_items(&mut self) -> Self::Output {
         let mut expressions = Vec::new();
-        let is_all = if self.random.bool() {
+        let is_all = if self.random.d9() == 1 {
             true
         } else {
             let mut expr_generator = ExprGenerator::new(self);

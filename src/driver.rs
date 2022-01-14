@@ -2,13 +2,13 @@ use std::path::PathBuf;
 
 use crate::{
     ast::{CypherGenerator, CypherNode, TransformVisitor},
-    common::{Log, RandomGenerator, OutputWriter},
+    common::{Log, OutputWriter, RandomGenerator},
     config::CypherConfig,
     db::{AtlasConfig, AtlasConnection},
     meta::GraphSchema,
 };
-use serde_json::Value;
 use rpc::atlas::ExecRequest;
+use serde_json::Value;
 use tonic::Request;
 
 #[derive(Default)]
@@ -46,7 +46,6 @@ impl Driver {
         self.atlas_connection = Some(AtlasConnection::new(atlas).await);
         println!("\nConnect Success!\n");
     }
-
 }
 
 impl Driver {
@@ -63,7 +62,9 @@ impl Driver {
     /// ast tree transfrom to cypher string.
     pub fn transfrom(&self, cypher_node: Box<CypherNode>) -> String {
         let mut transformer = TransformVisitor::new();
-        transformer.exec(cypher_node)
+        let mut ans = transformer.exec(cypher_node);
+        ans += ";";
+        ans
     }
 
     pub fn add_query(&mut self) {
@@ -92,8 +93,6 @@ impl Driver {
         // log_record recording intermediate information
         let mut log_record = Log::new();
 
-        
-
         let mut results = Vec::new();
 
         // while current queries < max_queries.
@@ -103,10 +102,9 @@ impl Driver {
 
             // transform ast tree to string.
             let cypher_string = self.transfrom(Box::new(cypher_ast.clone()));
-            
 
             // print queries instead of executing them
-            if  self.cypher_config.dry_run {
+            if self.cypher_config.dry_run {
                 println!("CypherString:\n{}", cypher_string);
             }
 
@@ -114,7 +112,7 @@ impl Driver {
             if self.cypher_config.dump_all_graphs {
                 println!("CypherAST:\n{:?}", cypher_ast);
             }
-            
+
             log_record.execute(Box::new(cypher_ast));
 
             // query number add 1
@@ -138,13 +136,12 @@ impl Driver {
                     .into_inner()
                     .result;
 
-                // println!("\n{}", res);
+                println!("\n{}", res);
 
-                let mut v: Value = serde_json::from_str(res.as_str()).unwrap();
-                let errors = v["errors"].take();
-                let record = serde_json::from_value::<Vec<String>>(errors).unwrap();
-                if !record.is_empty() {
-                    results.push((cypher_string, record));
+                let v: Value = serde_json::from_str(res.as_str()).unwrap();
+                let errors = v.get("errors").unwrap().as_array().unwrap().clone();
+                if !errors.is_empty() {
+                    results.push((cypher_string, errors));
                 }
             }
         }
@@ -156,7 +153,7 @@ impl Driver {
                 output.write_errors(cypher, errors);
             }
         }
-        
+
         // print report.
         log_record.report();
 

@@ -2,6 +2,6 @@
     "call_query": false,
     "max_queries": 10,
     "dry_run": true,
-    "verbose": "../tmp",
+    "verbose": "./report/test.csv",
     "dump_all_graphs": false
 }

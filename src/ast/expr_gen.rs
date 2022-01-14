@@ -575,7 +575,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 ))
             }
             // ParenthesizedExpression
-            41..=45 => {
+            41..=43 => {
                 let expression = self.visit();
                 Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
             }

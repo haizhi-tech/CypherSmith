@@ -63,7 +63,7 @@
                     "name": "edge_id",
                     "prop_id": 0,
                     "prop_type": "Int32",
-                    "is_pk": true,
+                    "is_pk": false,
                     "nullable": false,
                     "is_delete": false
                 }
