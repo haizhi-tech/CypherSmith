@@ -32,7 +32,7 @@ The following options are currently supported:
 
 ### Detailed configuration description
 
-Basic Config
+#### Basic Config
 |  option   |  description |
 |  :----:  | :----:  |
 |  --call_query | whether generate function call cypher string |
@@ -44,7 +44,7 @@ Basic Config
 
 Example: ./test/config.json ./test/atlas_config.json
 
-Schema Config 
+#### Schema Config 
 | option | description |
 | :----: | :----: |
 | --name | Graph name |
@@ -53,7 +53,7 @@ Schema Config
 
 Example: ./test/schema.json
 
-AtlasConnection Config
+#### AtlasConnection Config
 Configures the user, password, and address information for AtlasGraph Server.
 | option | description |
 | :----: | :----: |
