@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::{
     ast::{CypherGenerator, CypherNode, TransformVisitor},
-    common::{Log, OutputWriter, RandomGenerator},
+    common::{constants, Diagnostic, Log, OutputWriter, RandomGenerator},
     config::CypherConfig,
     db::{AtlasConfig, AtlasConnection},
     meta::GraphSchema,
@@ -14,6 +14,8 @@ use tonic::Request;
 #[derive(Default)]
 pub struct Driver {
     queries: u32,
+    retries: i32,
+    retry_limit: i32,
     random: RandomGenerator,
     graph_schema: GraphSchema,
     cypher_config: CypherConfig,
@@ -24,6 +26,8 @@ impl Driver {
     pub fn new() -> Driver {
         Driver {
             queries: 0,
+            retries: 0,
+            retry_limit: constants::DEFAULT_QUERY_LIMIT,
             random: RandomGenerator::default(),
             graph_schema: GraphSchema::default(),
             cypher_config: CypherConfig::default(),
@@ -50,13 +54,19 @@ impl Driver {
 
 impl Driver {
     /// ast tree construct
-    pub fn construct(&mut self) -> CypherNode {
+    pub fn construct(&mut self) -> Result<CypherNode, Diagnostic> {
         let mut ast_generator = CypherGenerator::new_schema(&self.graph_schema);
-        if self.cypher_config.call_query && self.random.d9() > 7 {
-            ast_generator.call_query()
-        } else {
-            ast_generator.visit()
+        while self.retries < self.retry_limit {
+            let query = if self.cypher_config.call_query && self.random.d9() > 7 {
+                ast_generator.call_query()
+            } else {
+                ast_generator.visit()
+            };
+            if query.is_ok() {
+                return query;
+            }
         }
+        Err(Diagnostic::error("Retry Limit", None))
     }
 
     /// ast tree transfrom to cypher string.
@@ -89,7 +99,7 @@ impl Driver {
     }
 
     /// databse execution
-    pub async fn execute(&mut self) -> Result<(), String> {
+    pub async fn execute(&mut self) -> Result<(), Diagnostic> {
         // log_record recording intermediate information
         let mut log_record = Log::new();
 
@@ -98,7 +108,7 @@ impl Driver {
         // while current queries < max_queries.
         while self.queries < self.cypher_config.max_queries {
             // generator the ast tree and string.
-            let cypher_ast = self.construct();
+            let cypher_ast = self.construct()?;
 
             // transform ast tree to string.
             let cypher_string = self.transfrom(Box::new(cypher_ast.clone()));

@@ -1,7 +1,7 @@
-use super::{constants, cypher_gen::CypherGenerator, ExpressionNodeVisitor};
+use super::{cypher_gen::CypherGenerator, ExpressionNodeVisitor};
 use crate::common::{
-    BinOpKind, CaseAlternative, CmpKind, DataKind, Expr, ExprKind, Literal, PredicateFunctionKind,
-    RandomGenerator, SubQueryKind, UnOpKind,
+    constants, BinOpKind, CaseAlternative, CmpKind, DataKind, Diagnostic, Expr, ExprKind, Literal,
+    PredicateFunctionKind, RandomGenerator, SubQueryKind, UnOpKind,
 };
 
 pub struct ExprGenerator<'a> {
@@ -28,7 +28,10 @@ impl<'a> ExprGenerator<'a> {
 impl ExprGenerator<'_> {
     pub fn visit(&mut self) -> Expr {
         // self.complexity = 0;
-        self.visit_expression()
+        match self.visit_expression() {
+            Ok(epxr) => epxr,
+            _ => self.visit(),
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl ExprGenerator<'_> {
 }
 
 impl ExpressionNodeVisitor for ExprGenerator<'_> {
-    type Output = Expr;
+    type Output = Result<Expr, Diagnostic>;
 
     /// ### Synopsis
     /// Expression: OrExpression
@@ -119,7 +122,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
     /// ### Synopsis
     /// OrExpression: XorExpression (OR XorExpression)*
     fn visit_or_expression(&mut self) -> Self::Output {
-        let mut or_expr = self.visit_xor_expression();
+        let mut or_expr = self.visit_xor_expression()?;
 
         // random loop
         for _ in 0..self.loop_limit {
@@ -127,60 +130,60 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new or clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_xor_expression();
+                let rhs = self.visit_xor_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(BinOpKind::Or, Box::new(or_expr), Box::new(rhs));
                 or_expr = Expr::from(kind);
             }
         }
 
-        or_expr
+        Ok(or_expr)
     }
 
     /// ### Synopsis
     /// XorExpression: AndExpression (XOR AndExpression)*
     fn visit_xor_expression(&mut self) -> Self::Output {
-        let mut xor_expr = self.visit_and_expression();
+        let mut xor_expr = self.visit_and_expression()?;
 
         for _ in 0..self.loop_limit {
             // complexity limit.
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new xor clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_xor_expression();
+                let rhs = self.visit_xor_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(BinOpKind::Xor, Box::new(xor_expr), Box::new(rhs));
                 xor_expr = Expr::from(kind);
             }
         }
 
-        xor_expr
+        Ok(xor_expr)
     }
 
     /// ### Synopsis
     /// AndExpression: NotExpression (AND NotExpression)*
     fn visit_and_expression(&mut self) -> Self::Output {
-        let mut and_expr = self.visit_not_expression();
+        let mut and_expr = self.visit_not_expression()?;
 
         for _ in 0..self.loop_limit {
             // complexity limit.
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new and clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_not_expression();
+                let rhs = self.visit_not_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(BinOpKind::And, Box::new(and_expr), Box::new(rhs));
                 and_expr = Expr::from(kind);
             }
         }
 
-        and_expr
+        Ok(and_expr)
     }
 
     /// ### Synopsis
     /// NotExpression: Not? ComparsionExpression
     fn visit_not_expression(&mut self) -> Self::Output {
-        let mut not_expr = self.visit_comparison_expression();
+        let mut not_expr = self.visit_comparison_expression()?;
 
         if (self.random.d12() == 1) && (self.complexity < self.limit) {
             // new not clause.
@@ -190,13 +193,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             not_expr = Expr::from(kind);
         }
 
-        not_expr
+        Ok(not_expr)
     }
 
     /// ### Synopsis
     /// ComparisonExpression: AddOrSubtractExpression (PartialComparisonExpression)*;
     fn visit_comparison_expression(&mut self) -> Self::Output {
-        let mut cmp_expr = self.visit_add_or_subtract_expression();
+        let mut cmp_expr = self.visit_add_or_subtract_expression()?;
         let mut tails = Vec::new();
 
         for _ in 0..self.loop_limit {
@@ -205,7 +208,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 // new cmp clause, increase complexity.
                 self.complexity += 1;
                 let kind = self.random_cmp_kind();
-                let rhs = self.visit_add_or_subtract_expression();
+                let rhs = self.visit_add_or_subtract_expression()?;
                 tails.push((kind, Box::new(rhs)));
             }
         }
@@ -213,13 +216,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             let kind = ExprKind::Cmp(Box::new(cmp_expr), tails);
             cmp_expr = Expr::from(kind);
         }
-        cmp_expr
+        Ok(cmp_expr)
     }
 
     /// ### Synopsis
     /// AddOrSubtractExpression: MultiplyDivideModuloExpression (+/-  MultiplyDivideModuloExpression)*
     fn visit_add_or_subtract_expression(&mut self) -> Self::Output {
-        let mut ret_expr = self.visit_multiply_divide_modulo_expression();
+        let mut ret_expr = self.visit_multiply_divide_modulo_expression()?;
 
         // random loop
         for _ in 0..self.loop_limit {
@@ -227,7 +230,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new add/subtract clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_multiply_divide_modulo_expression();
+                let rhs = self.visit_multiply_divide_modulo_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(
                     self.random_add_or_sub_kind(),
@@ -238,13 +241,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
         }
 
-        ret_expr
+        Ok(ret_expr)
     }
 
     /// ### Synopsis
     /// MultiplyDivideModuloExpression: PowerOfExpression (*/%// PowerOfExpression)*
     fn visit_multiply_divide_modulo_expression(&mut self) -> Self::Output {
-        let mut ret_expr = self.visit_power_of_expression();
+        let mut ret_expr = self.visit_power_of_expression()?;
 
         // random loop
         for _ in 0..self.loop_limit {
@@ -252,7 +255,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new *///% clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_power_of_expression();
+                let rhs = self.visit_power_of_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(
                     self.random_mul_div_mod_kind(),
@@ -263,13 +266,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
         }
 
-        ret_expr
+        Ok(ret_expr)
     }
 
     /// ### Synopsis
     /// PowerOfExpression: UnaryAddOrSubtractExpression ('^', UnaryAddOrSubtractExpression)* ;
     fn visit_power_of_expression(&mut self) -> Self::Output {
-        let mut power_expr = self.visit_unary_add_or_subtract_expression();
+        let mut power_expr = self.visit_unary_add_or_subtract_expression()?;
 
         // random loop
         for _ in 0..self.loop_limit {
@@ -277,20 +280,20 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             if (self.random.d20() == 1) && (self.complexity < self.limit) {
                 // new power clause, increase complexity.
                 self.complexity += 1;
-                let rhs = self.visit_unary_add_or_subtract_expression();
+                let rhs = self.visit_unary_add_or_subtract_expression()?;
                 // new Expression.
                 let kind = ExprKind::BinOp(BinOpKind::Pow, Box::new(power_expr), Box::new(rhs));
                 power_expr = Expr::from(kind);
             }
         }
 
-        power_expr
+        Ok(power_expr)
     }
 
     /// ### Synopsis
     /// UnaryAddOrSubtractExpression: ('+'|'-')? StringListNullOperatorExpression ;
     fn visit_unary_add_or_subtract_expression(&mut self) -> Self::Output {
-        let mut unary_expr = self.visit_string_list_null_operator_expression();
+        let mut unary_expr = self.visit_string_list_null_operator_expression()?;
 
         if (self.random.d9() == 1) && (self.complexity < self.limit) {
             // new not clause.
@@ -300,13 +303,13 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             unary_expr = Expr::from(kind);
         }
 
-        unary_expr
+        Ok(unary_expr)
     }
 
     /// ### Synopsis
     /// StringListNullOperatorExpression: PropertyOrLabelsExpression (String|List|NullExpression)*
     fn visit_string_list_null_operator_expression(&mut self) -> Self::Output {
-        let mut query_expr = self.visit_property_or_labels_expression();
+        let mut query_expr = self.visit_property_or_labels_expression()?;
 
         // expr loop
         for _ in 0..self.random.under(3) {
@@ -314,7 +317,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 if (self.complexity < self.limit) && (self.random.d6() == 1) {
                     // StringOperatorExpression
                     self.complexity += 1;
-                    let string_expr = self.visit_property_or_labels_expression();
+                    let string_expr = self.visit_property_or_labels_expression()?;
                     let kind = ExprKind::BinOp(
                         self.random_string_kind(),
                         Box::new(query_expr),
@@ -326,7 +329,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     if self.random.d6() > 2 {
                         // In PropertyOrLabelsExpression
                         self.complexity += 1;
-                        let list_expr = self.visit_property_or_labels_expression();
+                        let list_expr = self.visit_property_or_labels_expression()?;
                         let kind = ExprKind::BinOp(
                             BinOpKind::In,
                             Box::new(query_expr),
@@ -399,7 +402,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
         }
 
-        query_expr
+        Ok(query_expr)
     }
 
     /// PropertyOrLabelsExpression
@@ -407,12 +410,12 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
     /// Atom {PropertyLookup}* NodeLabel*
     fn visit_property_or_labels_expression(&mut self) -> Self::Output {
         // Property
-        let mut query_expr = self.visit_atom();
+        let mut query_expr = self.visit_atom()?;
 
         let data_kind = query_expr.kind.get_kind();
 
         if data_kind != DataKind::Vertex {
-            return query_expr;
+            return Ok(query_expr);
         }
 
         if (self.complexity < self.limit) && self.random.bool() {
@@ -441,7 +444,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
             }
         }
 
-        query_expr
+        Ok(query_expr)
     }
 
     /// Atom
@@ -452,7 +455,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
 
         match select_number {
             // Literal Expression
-            0..=10 => Expr::from(ExprKind::Lit(self.random_literal())),
+            0..=10 => Ok(Expr::from(ExprKind::Lit(self.random_literal()))),
             // CaseExpression
             11..=13 => {
                 self.complexity += 1;
@@ -478,10 +481,16 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     None
                 };
 
-                Expr::from(ExprKind::Case(case_expr, case_alternatives, else_expr))
+                Ok(Expr::from(ExprKind::Case(
+                    case_expr,
+                    case_alternatives,
+                    else_expr,
+                )))
             }
             // COUNT (*)
-            14..=20 => Expr::from(ExprKind::Lit(Literal::String("COUNT (*)".to_string()))),
+            14..=20 => Ok(Expr::from(ExprKind::Lit(Literal::String(
+                "COUNT (*)".to_string(),
+            )))),
             // ListComprehension: [FilterExpression (|Expression)? ]
             21..=23 => {
                 self.complexity += 1;
@@ -508,7 +517,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     ));
                 }
 
-                Expr::from(ExprKind::Lit(Literal::List(vec![filter_expr])))
+                Ok(Expr::from(ExprKind::Lit(Literal::List(vec![filter_expr]))))
             }
             // PatternComprehension: [(variable =)? RelationShipsPattern (Where)? | Expression]
             24..=29 => {
@@ -522,7 +531,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
 
                 let lhs = Expr::from(ExprKind::SubQuery(
                     SubQueryKind::PredicatePattern,
-                    Box::new(self.cypher.expr_pattern()),
+                    Box::new(self.cypher.expr_pattern()?),
                     where_clause,
                 ));
                 let rhs = self.visit();
@@ -533,7 +542,7 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     Box::new(rhs),
                 ));
 
-                Expr::from(ExprKind::Lit(Literal::List(vec![list_expr])))
+                Ok(Expr::from(ExprKind::Lit(Literal::List(vec![list_expr]))))
             }
             // ALL|ANY|NONE|SINGLE (FilterExpression)
             // FilterExpression: Variable IN Expression (Where Expression)?
@@ -557,23 +566,26 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                     Box::new(filter_expr),
                 );
 
-                Expr::from(kind)
+                Ok(Expr::from(kind))
             }
             // RelationShipsPattern
             36..=40 => {
                 self.complexity += 1;
 
-                let pattern_query = self.cypher.expr_relation_pattern();
-                Expr::from(ExprKind::SubQuery(
+                let pattern_query = self.cypher.expr_relation_pattern()?;
+                Ok(Expr::from(ExprKind::SubQuery(
                     SubQueryKind::RelationShipsPattern,
                     Box::new(pattern_query),
                     None,
-                ))
+                )))
             }
             // ParenthesizedExpression
             41..=43 => {
                 let expression = self.visit();
-                Expr::from(ExprKind::UnOp(UnOpKind::Parentheses, Box::new(expression)))
+                Ok(Expr::from(ExprKind::UnOp(
+                    UnOpKind::Parentheses,
+                    Box::new(expression),
+                )))
             }
             // TODO: FunctionInvocation: FunctionName ( (DISTINCT)? Expression*)
             // 8 => {
@@ -603,19 +615,19 @@ impl ExpressionNodeVisitor for ExprGenerator<'_> {
                 self.complexity += 1;
 
                 // ExistentialSubquery: `EXISTS` `{` (RegularQuery|(Pattern where)) `}`
-                let query = self.cypher.exec();
-                Expr::from(ExprKind::SubQuery(
+                let query = self.cypher.exec()?;
+                Ok(Expr::from(ExprKind::SubQuery(
                     SubQueryKind::Exists,
                     Box::new(query),
                     None,
-                ))
+                )))
             }
             // Variable
             70..=99 => {
-                let var = self.cypher.variables.get_old_variable();
-                Expr::from(ExprKind::Variable(var))
+                let var = self.cypher.variables.get_old_variable()?;
+                Ok(Expr::from(ExprKind::Variable(var)))
             }
-            _ => Expr::from(ExprKind::Lit(self.random_literal())),
+            _ => Ok(Expr::from(ExprKind::Lit(self.random_literal()))),
         }
     }
 }

@@ -160,7 +160,7 @@ impl VariableGenerator {
 
     pub fn get_old_variable(&mut self) -> Result<Variable, Diagnostic> {
         if self.number == 0 {
-            return Diagnostic::error("variable out of range.", None);
+            return Err(Diagnostic::error("variable out of range.", None));
         }
         let mut random = RandomGenerator::new();
         let old_number = random.d100() % (self.number as i32);

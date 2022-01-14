@@ -18,6 +18,13 @@ pub use typedef::*;
 pub use util::*;
 pub use variable::{DataKind, Variable, VariableGenerator};
 
+pub mod constants {
+    pub const DEFAULT_LOOP_LIMIT: i32 = 3;
+    pub const DEFAULT_EXPRESSION_LIMIT: i32 = 5;
+    pub const DEFAULT_QUERY_LIMIT: i32 = 15;
+    // pub const DEFAULT_RETRY_LIMIT: i32 = 20;
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Log, VariableGenerator};

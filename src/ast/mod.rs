@@ -12,17 +12,11 @@ pub use expr::ExpressionNodeVisitor;
 pub use expr_gen::ExprGenerator;
 pub use transform::TransformVisitor;
 
-mod constants {
-    pub const DEFAULT_LOOP_LIMIT: i32 = 3;
-    pub const DEFAULT_EXPRESSION_LIMIT: i32 = 5;
-    pub const DEFAULT_QUERY_LIMIT: i32 = 15;
-}
-
 #[cfg(test)]
 mod tests {
 
-    use super::{constants, CypherGenerator, ExprGenerator};
-    use crate::common::{DataType, Property};
+    use super::{CypherGenerator, ExprGenerator};
+    use crate::common::{constants, DataType, Property};
     use crate::meta::{GraphSchema, Label, LabelKind};
 
     #[test]
