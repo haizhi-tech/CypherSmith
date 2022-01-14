@@ -690,8 +690,11 @@ impl ConvertVisitor for TransformVisitor {
             .map(|label| label.get_name())
             .collect::<Vec<_>>()
             .join("|:");
-        query_string += ":";
-        query_string += &labels_string;
+
+        if labels_string.is_empty() {
+            query_string += ":";
+            query_string += &labels_string;
+        }
 
         // *RangeStart..RangeEnd
         if is_range {
